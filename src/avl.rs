@@ -2,12 +2,11 @@ use std::fmt::Display;
 use std::fmt::Debug;
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::cmp::{Ordering, max};
 
 use super::tree::*;
 use super::tree::TreeDir::*;
 
-pub type AVLBranch<T> = Rc<RefCell<AVLNode<T>>>;
+pub type AVLBranch<T> = Rc<RefCell<TreeNode<T>>>;
 pub type AVLTree<T> = Option<AVLBranch<T>>;
 
 pub fn avl_check<T: Ord>(parent: &AVLTree<T>, uncle: &AVLTree<T>) -> bool {
@@ -28,10 +27,10 @@ pub fn avl_balance<T: Ord>(rnode: &AVLBranch<T>, op: TreeOp) {
                 if xpath != ppath {
                     let r = rnode.borrow();
                     let pnode = r.get_child(ppath).as_ref().unwrap();
-                    bst_rotate(&pnode, xpath);
+                    helper::bst_rotate(pnode, xpath);
                 }
     
-                bst_rotate(rnode, ppath);
+                helper::bst_rotate(rnode, ppath);
             }
         },
         // For deletion we treat the definitions as flipped (parent path becomes longer path)
@@ -62,124 +61,12 @@ pub fn avl_balance<T: Ord>(rnode: &AVLBranch<T>, op: TreeOp) {
                     };
 
                     if xpath != ppath {
-                        bst_rotate(&pnode, xpath);
+                        helper::bst_rotate(pnode, xpath);
                     }
                 }
-                bst_rotate(rnode, ppath);
+                helper::bst_rotate(rnode, ppath);
             }
         }
-    }
-}
-
-pub struct AVLNode<T: Ord> {
-    key: T,
-    height: usize,
-    left: AVLTree<T>,
-    right: AVLTree<T>,
-}
-
-impl <T: Ord> AVLNode<T> {
-
-    pub fn new_with(key: T) -> Self {
-        AVLNode {
-            key,
-            height: 1,
-            left: None,
-            right: None
-        }
-    }
-
-    pub fn update_height(&mut self) {
-        self.height = max(
-            self.left.as_ref().map_or(0, |node| node.borrow().height),
-            self.right.as_ref().map_or(0, |node| node.borrow().height)
-        ) + 1;
-    }
-
-    pub fn get_child(&self, pos: TreeDir) -> &AVLTree<T> {
-        match pos {
-            Left => &self.left,
-            Right => &self.right
-        }
-    }
-
-    pub fn get_child_mut(&mut self, pos: TreeDir) -> &mut AVLTree<T> {
-        match pos {
-            Left => &mut self.left,
-            Right => &mut self.right
-        }
-    }
-
-    pub fn prune(&mut self, pos: TreeDir) -> AVLTree<T> {
-        match pos {
-            Left => self.left.take(),
-            Right => self.right.take()
-        }
-    }
-
-    pub fn search(&self, key: &T) -> Option<TreeDir> {
-        match key.cmp(&self.key) {
-            Ordering::Equal => None,
-            Ordering::Greater => Some(Right),
-            Ordering::Less => Some(Left)
-        }
-    }
-
-    pub fn get_height(&self) -> usize {
-        self.height
-    }
-
-    pub fn pop(self) -> T {
-        self.key
-    }
-
-    pub fn replace_key(&mut self, mut key: T) -> T {
-        if let Some(ref node) = self.left {
-            let n = node.borrow();
-            assert_ne!(key.cmp(&n.key), Ordering::Less);
-        }
-
-        if let Some(ref node) = self.right {
-            let n = node.borrow();
-            assert_ne!(key.cmp(&n.key), Ordering::Greater);
-        }
-
-        std::mem::swap(&mut self.key, &mut key);
-
-        key
-    }
-
-}
-
-impl <T: Ord + Display> Display for AVLNode<T> {
-
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        match self.left {
-            Some(ref node) => std::fmt::Display::fmt(&node.borrow(), f),
-            None => Ok(())
-        }.and_then(|_| write!(f, "{}, ", self.key)).and_then(|_|
-            match self.right {
-                Some(ref node) => std::fmt::Display::fmt(&node.borrow(), f),
-                None => Ok(())
-            }
-        )
-    }
-}
-
-impl <T: Ord + Debug> Debug for AVLNode<T> {
-
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        let mut builder = f.debug_struct(&format!("{:?}", &self.key));
-        builder.field("height", &self.height);
-        match self.right {
-            Some(ref node) => builder.field("right", &node.borrow()),
-            None => builder.field("right", &"None")
-        };
-        match self.left {
-            Some(ref node) => builder.field("left", &node.borrow()),
-            None => builder.field("left", &"None")
-        };
-        builder.finish()
     }
 }
 
