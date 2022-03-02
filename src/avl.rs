@@ -64,8 +64,21 @@ fn avl_check_beta<T: Ord + Debug>(parent: &AVLTree<T>, uncle: &AVLTree<T>) -> bo
 fn avl_balance<T: Ord + Debug>(rnode: &AVLBranch<T>, op: TreeOpPath) {
     match op {
         TreeOpPath::Insert(ppath, xpath) => {
+            let rebalance = {
+                avl_check_beta(rnode.borrow().get_child(ppath), rnode.borrow().get_child(ppath.reflect()))
+            };
 
+            if rebalance {
+                if xpath != ppath {
+                    let r = rnode.borrow();
+                    let pnode = r.get_child(ppath).as_ref().unwrap();
+                    bst_rotate(&pnode, xpath);
+                }
+    
+                bst_rotate(rnode, ppath);
+            }
         },
+        // For deletion we treat the definitions as flipped (parent path becomes longer path)
         TreeOpPath::Delete(upath) => {
             let ppath = upath.reflect();
             let rebalance = {
@@ -230,7 +243,69 @@ fn bst_delete<T: Ord + Debug>(root: &mut AVLTree<T>, key: &T) -> Option<T> {
     Some(owned_key)
 }
 
-fn bst_insert<T: Ord + Debug>(rnode: &AVLBranch<T>, key: T) -> Option<TreeDir> {
+fn bst_insert<T: Ord + Debug>(root: &mut AVLTree<T>, key: T) {
+    let (mut node_stack, (mut xpath, mut pnode)) = if let Some(root_node) = root {
+        (
+            Vec::with_capacity(root_node.borrow().get_height()),
+            if let Some(path) = root_node.borrow().search(|nkey| key.cmp(nkey)) {
+                (path, Rc::clone(root_node))
+            } else {
+                return
+            }
+        )
+    } else { 
+        *root = Some(
+            Rc::new(
+                RefCell::new(
+                    AVLNode::new_with(key)
+                )
+            )
+        );
+        return
+    };
+
+    // Find where we want to insert
+    loop {
+        let (path, node) = {
+            let mut p = pnode.borrow_mut();
+            let xtree = p.get_child_mut(xpath);
+
+            if let Some(xnode) = xtree {
+                if let Some(path) = xnode
+                    .borrow()
+                    .search(|nkey| key.cmp(nkey)) {
+                        (path, Rc::clone(&xnode))
+                } else {
+                    return;
+                }
+            } else {
+                *xtree = Some(
+                    Rc::new(
+                        RefCell::new(
+                            AVLNode::new_with(key)
+                        )
+                    )
+                );
+                p.update_height();
+                break;
+            }
+        };
+
+        node_stack.push((xpath, Rc::clone(&pnode)));
+        xpath = path;
+        pnode = node;
+    }
+
+    while let Some((ppath, node)) = node_stack.pop() {
+        { node.borrow_mut().update_height(); }
+
+        avl_balance(&node, TreeOpPath::Insert(ppath, xpath));
+
+        xpath = ppath;
+    }
+}
+
+fn bst_insert_rec<T: Ord + Debug>(rnode: &AVLBranch<T>, key: T) -> Option<TreeDir> {
     // If we didn't find the key grab the next child
     // otherwise we return
     let (parent_path, parent, uncle) = {
@@ -251,7 +326,7 @@ fn bst_insert<T: Ord + Debug>(rnode: &AVLBranch<T>, key: T) -> Option<TreeDir> {
 
     // Further search the tree if possible otherwise we insert
     if let Some(pnode) = parent {
-        match bst_insert(&pnode, key) {
+        match bst_insert_rec(&pnode, key) {
             Some(child_path) => {
                 // Keep this in it's own scope to prevent a panic
                 { pnode.borrow_mut().update_height(); }
@@ -361,9 +436,9 @@ impl <T: Ord + Debug> Tree<T> {
         Tree(None)
     }
 
-    pub fn insert(&mut self, key: T) {
+    pub fn insert_rec(&mut self, key: T) {
         if let Some(ref branch) = self.0 {
-            bst_insert(branch, key);
+            bst_insert_rec(branch, key);
         } else {
             self.0 = Some(
                 Rc::new(
@@ -373,6 +448,10 @@ impl <T: Ord + Debug> Tree<T> {
                 )
             );
         }
+    }
+
+    pub fn insert(&mut self, key: T) {
+        bst_insert(&mut self.0, key)
     }
 
     pub fn delete(&mut self, key: &T) -> Option<T> {
