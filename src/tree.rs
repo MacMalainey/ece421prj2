@@ -1,13 +1,10 @@
 use std::fmt::Display;
 use std::fmt::Debug;
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::cmp::{Ordering, max};
 
-use super::avl::*;
-
-pub mod helper;
-use helper::*;
+mod ops;
+use ops::{bst_insert, bst_delete};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TreeDir {
@@ -32,41 +29,62 @@ pub enum TreeOp {
     Delete(TreeDir)
 }
 
-impl <T: Ord> Tree<T> {
+pub struct Tree<T: Ord, U>
+where
+    U: TreeBranch<T>,
+{
+    _t: std::marker::PhantomData<T>,
+    root: Option<U>
+}
+
+impl <T: Ord, U> Tree<T, U>
+    where U: TreeBranch<T>
+{
     pub fn new() -> Self {
-        Tree(None)
+        Tree::<T, U> {
+            _t: std::marker::PhantomData,
+            root: None
+        }
     }
 
     pub fn insert(&mut self, key: T) {
-        bst_insert(&mut self.0, key)
+        bst_insert(&mut self.root, key)
     }
 
     pub fn delete(&mut self, key: &T) -> Option<T> {
-        bst_delete(&mut self.0, key)
+        bst_delete(&mut self.root, key)
     }
 
     pub fn height(&self) -> usize {
-        self.0.as_ref().map_or(0, |node| node.borrow().get_height())
+        self.root.as_ref().map_or(0, |node| node.borrow().get_height())
     }
 }
 
-pub type TreeNodeRef<T> = Rc<RefCell<TreeNode<T>>>;
+pub type TreeNodeRef<T, U> = RefCell<TreeNode<T, U>>;
 
-pub trait TreeBranch<T: Ord>: std::ops::Deref<Target=TreeNodeRef<T>> {
-    fn rebalance(&self, op: TreeOp);
-    fn rotate(&self, ppath: TreeDir, xpath: TreeDir);
+pub trait TreeBranch<T: Ord>
+where
+    Self: std::ops::Deref<Target=TreeNodeRef<T, Self>>,
+    Self: std::marker::Sized,
+    Self: Clone
+{
+    fn new(node: TreeNode<T, Self>) -> Self;
+    fn rebalance(&self, op: TreeOp) -> Option<(TreeDir, TreeDir)>;
+    fn into_inner(self) -> Result<TreeNodeRef<T, Self>, Self>;
 }
 
-pub struct Tree<T: Ord>(AVLTree<T>);
-
-pub struct TreeNode<T: Ord> {
+pub struct TreeNode<T: Ord, U>
+    where U: TreeBranch<T>
+{
     key: T,
     height: usize,
-    left: AVLTree<T>,
-    right: AVLTree<T>,
+    left: Option<U>,
+    right: Option<U>,
 }
 
-impl <T: Ord> TreeNode<T> {
+impl <T: Ord, U> TreeNode<T, U>
+    where U: TreeBranch<T>
+{
 
     pub fn new_with(key: T) -> Self {
         TreeNode {
@@ -84,21 +102,21 @@ impl <T: Ord> TreeNode<T> {
         ) + 1;
     }
 
-    pub fn get_child(&self, pos: TreeDir) -> &AVLTree<T> {
+    pub fn get_child(&self, pos: TreeDir) -> &Option<U> {
         match pos {
             Left => &self.left,
             Right => &self.right
         }
     }
 
-    pub fn get_child_mut(&mut self, pos: TreeDir) -> &mut AVLTree<T> {
+    pub fn get_child_mut(&mut self, pos: TreeDir) -> &mut Option<U> {
         match pos {
             Left => &mut self.left,
             Right => &mut self.right
         }
     }
 
-    pub fn prune(&mut self, pos: TreeDir) -> AVLTree<T> {
+    pub fn prune(&mut self, pos: TreeDir) -> Option<U> {
         match pos {
             Left => self.left.take(),
             Right => self.right.take()
@@ -143,10 +161,13 @@ impl <T: Ord> TreeNode<T> {
  // FORMATTING TRAITS //
 /*********************/
 
-impl <T: Ord + Display> Display for Tree<T> {
-
+impl <T, U> Display for Tree<T, U>
+where
+    T: Ord + Display,
+    U: TreeBranch<T>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        match &self.0 {
+        match &self.root {
             Some(node) => {
                 write!(f, "Tree: {{ {}}}", node.borrow())
             }
@@ -155,10 +176,13 @@ impl <T: Ord + Display> Display for Tree<T> {
     }
 }
 
-impl <T: Ord + Debug> Debug for Tree<T> {
-
+impl <T, U> Debug for Tree<T, U>
+where
+    T: Ord + Debug,
+    U: TreeBranch<T>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        match &self.0 {
+        match &self.root {
             Some(node) => {
                 node.borrow().fmt(f)
             }
@@ -167,7 +191,11 @@ impl <T: Ord + Debug> Debug for Tree<T> {
     }
 }
 
-impl <T: Ord + Display> Display for TreeNode<T> {
+impl <T, U> Display for TreeNode<T, U>
+where
+    T: Ord + Display,
+    U: TreeBranch<T>
+{
 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         match self.left {
@@ -182,8 +210,11 @@ impl <T: Ord + Display> Display for TreeNode<T> {
     }
 }
 
-impl <T: Ord + Debug> Debug for TreeNode<T> {
-
+impl <T, U> Debug for TreeNode<T, U>
+where
+    T: Ord + Debug,
+    U: TreeBranch<T>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         let mut builder = f.debug_struct(&format!("{:?}", &self.key));
         builder.field("height", &self.height);

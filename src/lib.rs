@@ -1,11 +1,9 @@
 mod avl;
 mod tree;
 mod redblack;
-mod avlnew;
-mod treenew;
 
-pub type Tree<T, U> = treenew::Tree<T, U>;
-pub type AVLTree<T> = Tree<T, avlnew::AVLBranch<T>>;
+pub type Tree<T, U> = tree::Tree<T, U>;
+pub type AVLTree<T> = Tree<T, avl::AVLBranch<T>>;
 
 #[cfg(test)]
 mod tests {

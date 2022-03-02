@@ -1,47 +1,33 @@
-use std::fmt::Display;
-use std::fmt::Debug;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use super::tree::*;
 use super::tree::TreeDir::*;
 
-pub type AVLBranch<T> = Rc<RefCell<TreeNode<T>>>;
-pub type AVLTree<T> = Option<AVLBranch<T>>;
+pub struct AVLBranch<T: Ord>(Rc<TreeNodeRef<T, Self>>);
 
-pub fn avl_check<T: Ord>(parent: &AVLTree<T>, uncle: &AVLTree<T>) -> bool {
-    let uheight = uncle.as_ref().map_or(0, |node| node.borrow().get_height());
-    let pheight = parent.as_ref().map_or(0, |node| node.borrow().get_height());
-
-    pheight - uheight > 1
-}
-
-pub fn avl_balance<T: Ord>(rnode: &AVLBranch<T>, op: TreeOp) {
-    match op {
-        TreeOp::Insert(ppath, xpath) => {
-            let rebalance = {
-                avl_check(rnode.borrow().get_child(ppath), rnode.borrow().get_child(ppath.reflect()))
-            };
-
-            if rebalance {
-                if xpath != ppath {
-                    let r = rnode.borrow();
-                    let pnode = r.get_child(ppath).as_ref().unwrap();
-                    helper::bst_rotate(pnode, xpath);
-                }
+impl <T: Ord> TreeBranch<T> for AVLBranch<T> {
+    fn rebalance(&self, op: TreeOp) -> Option<(TreeDir, TreeDir)> {
+        match op {
+            TreeOp::Insert(ppath, xpath) => {
+                let rebalance = {
+                    avl_check(self.borrow().get_child(ppath), self.borrow().get_child(ppath.reflect()))
+                };
     
-                helper::bst_rotate(rnode, ppath);
-            }
-        },
-        // For deletion we treat the definitions as flipped (parent path becomes longer path)
-        TreeOp::Delete(upath) => {
-            let ppath = upath.reflect();
-            let rebalance = {
-                avl_check(rnode.borrow().get_child(ppath), rnode.borrow().get_child(upath))
-            };
-            if rebalance {
-                {
-                    let r = rnode.borrow();
+                if rebalance {
+                    Some((ppath, xpath))
+                } else {
+                    None
+                }
+            },
+            // For deletion we treat the definitions as flipped (parent path becomes longer path)
+            TreeOp::Delete(upath) => {
+                let ppath = upath.reflect();
+                let rebalance = {
+                    avl_check(self.borrow().get_child(ppath), self.borrow().get_child(upath))
+                };
+                if rebalance {
+                    let r = self.borrow();
                     let pnode = r.get_child(ppath).as_ref().unwrap();
                     let xpath = {
                         let p = pnode.borrow();
@@ -60,53 +46,40 @@ pub fn avl_balance<T: Ord>(rnode: &AVLBranch<T>, op: TreeOp) {
                             )
                     };
 
-                    if xpath != ppath {
-                        helper::bst_rotate(pnode, xpath);
-                    }
+                    Some((ppath, xpath))
+                } else {
+                    None
                 }
-                helper::bst_rotate(rnode, ppath);
             }
         }
     }
+    fn new(node: TreeNode<T, Self>) -> Self {
+        AVLBranch(Rc::new(RefCell::new(node)))
+    }
+    fn into_inner(self) -> Result<TreeNodeRef<T, Self>, Self> {
+        Rc::try_unwrap(
+            self.0
+        ).map_err(|orig| AVLBranch(orig))
+    }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::Tree;
-
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+impl <T: Ord> Clone for AVLBranch<T> {
+    fn clone(&self) -> Self {
+        AVLBranch(Rc::clone(&self.0))
     }
+}
 
-    #[test]
-    fn manual_check_order() {
-        let nums = [
-            40, 65, 55,
-            57, 58, 75, 60, 59
-        ];
-        let mut tree: Tree<u32> = Tree::new();
+impl <T: Ord> std::ops::Deref for AVLBranch<T> {
+    type Target=TreeNodeRef<T, AVLBranch<T>>;
 
-        for num in &nums {
-            println!("----- Insert: {} -------", num);
-            tree.insert(*num);
-            println!("{:#?}", tree);
-        }
+    fn deref(&self) -> &<Self as std::ops::Deref>::Target {
+        &self.0
     }
+}
 
-    #[test]
-    fn manual_check_delete() {
-        let nums = [
-            40, 65, 55,
-            57, 58, 75, 60, 59
-        ];
-        let mut tree: Tree<u32> = Tree::new();
+pub fn avl_check<T: Ord>(parent: &Option<AVLBranch<T>>, uncle: &Option<AVLBranch<T>>) -> bool {
+    let uheight = uncle.as_ref().map_or(0, |node| node.borrow().get_height());
+    let pheight = parent.as_ref().map_or(0, |node| node.borrow().get_height());
 
-        for num in &nums {
-            tree.insert(*num);
-        }
-        println!("----- Insert: {} -------", 40);
-        assert_eq!(tree.delete(&58), Some(58));
-        println!("{:#?}", tree);
-    }
+    pheight - uheight > 1
 }
