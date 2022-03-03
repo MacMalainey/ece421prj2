@@ -1,17 +1,15 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
+use std::fmt::Debug;
 use super::tree::*;
 use super::tree::TreeDir::*;
 
-pub struct AVLBranch<T: Ord>(Rc<TreeNodeRef<T, Self>>);
+pub struct AVLBalance();
 
-impl <T: Ord> TreeBranch<T> for AVLBranch<T> {
-    fn rebalance(&self, op: TreeOp) -> Option<(TreeDir, TreeDir)> {
+impl <T: Ord> TreeBalance<T> for AVLBalance {
+    fn rebalance(&mut self, node: &TreeNode<T, Self>, op: TreeOp) -> Option<(TreeDir, TreeDir)> {
         match op {
             TreeOp::Insert(ppath, xpath) => {
                 let rebalance = {
-                    avl_check(self.borrow().get_child(ppath), self.borrow().get_child(ppath.reflect()))
+                    avl_check(node.get_child(ppath), node.get_child(ppath.reflect()))
                 };
     
                 if rebalance {
@@ -24,10 +22,10 @@ impl <T: Ord> TreeBranch<T> for AVLBranch<T> {
             TreeOp::Delete(upath) => {
                 let ppath = upath.reflect();
                 let rebalance = {
-                    avl_check(self.borrow().get_child(ppath), self.borrow().get_child(upath))
+                    avl_check(node.get_child(ppath), node.get_child(upath))
                 };
                 if rebalance {
-                    let r = self.borrow();
+                    let r = node;
                     let pnode = r.get_child(ppath).as_ref().unwrap();
                     let xpath = {
                         let p = pnode.borrow();
@@ -53,33 +51,23 @@ impl <T: Ord> TreeBranch<T> for AVLBranch<T> {
             }
         }
     }
-    fn new(node: TreeNode<T, Self>) -> Self {
-        AVLBranch(Rc::new(RefCell::new(node)))
-    }
-    fn into_inner(self) -> Result<TreeNodeRef<T, Self>, Self> {
-        Rc::try_unwrap(
-            self.0
-        ).map_err(|orig| AVLBranch(orig))
-    }
-}
 
-impl <T: Ord> Clone for AVLBranch<T> {
-    fn clone(&self) -> Self {
-        AVLBranch(Rc::clone(&self.0))
+    fn new() -> Self {
+        AVLBalance()
     }
-}
 
-impl <T: Ord> std::ops::Deref for AVLBranch<T> {
-    type Target=TreeNodeRef<T, AVLBranch<T>>;
+    fn mark_root(&mut self) {}
+}   
 
-    fn deref(&self) -> &<Self as std::ops::Deref>::Target {
-        &self.0
-    }
-}
-
-pub fn avl_check<T: Ord>(parent: &Option<AVLBranch<T>>, uncle: &Option<AVLBranch<T>>) -> bool {
+pub fn avl_check<T: Ord>(parent: &Option<TreeBranch<T, AVLBalance>>, uncle: &Option<TreeBranch<T, AVLBalance>>) -> bool {
     let uheight = uncle.as_ref().map_or(0, |node| node.borrow().get_height());
     let pheight = parent.as_ref().map_or(0, |node| node.borrow().get_height());
 
     pheight - uheight > 1
+}
+
+impl Debug for AVLBalance {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        write!(f, "AVL")
+    }
 }

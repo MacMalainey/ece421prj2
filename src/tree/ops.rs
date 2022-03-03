@@ -1,7 +1,7 @@
 use super::*;
 
-pub fn bst_full_rotate<T: Ord, U>(rnode: &U, ppath: TreeDir, xpath: TreeDir)
-    where U: TreeBranch<T>
+pub fn bst_full_rotate<T: Ord, U>(rnode: &TreeBranch<T, U>, ppath: TreeDir, xpath: TreeDir)
+    where U: TreeBalance<T>
 {
     if xpath != ppath {
         let r = rnode.borrow();
@@ -12,8 +12,8 @@ pub fn bst_full_rotate<T: Ord, U>(rnode: &U, ppath: TreeDir, xpath: TreeDir)
     bst_rotate(rnode, ppath);
 }
 
-pub fn bst_rotate<T: Ord, U>(p: &U, direction: TreeDir)
-    where U: TreeBranch<T>
+pub fn bst_rotate<T: Ord, U>(p: &TreeBranch<T, U>, direction: TreeDir)
+    where U: TreeBalance<T>
 {
     // Break apart the tree
     let x = {
@@ -30,15 +30,15 @@ pub fn bst_rotate<T: Ord, U>(p: &U, direction: TreeDir)
     { *x.borrow_mut().get_child_mut(direction) = v };
 
     // Add P to X
-    { *p.borrow_mut().get_child_mut(direction.reflect()) = Some(x.clone()) };
+    { *p.borrow_mut().get_child_mut(direction.reflect()) = Some(Rc::clone(&x)) };
 
     // Update heights
     { x.borrow_mut().update_height() };
     { p.borrow_mut().update_height() };
 }
 
-pub fn bst_pop<T: Ord, U>(tree: &mut Option<U>) -> Result<T, ()>
-    where U: TreeBranch<T>
+pub fn bst_pop<T: Ord, U>(tree: &mut Option<TreeBranch<T, U>>) -> Result<T, ()>
+    where U: TreeBalance<T>
 {
     let successor = {
         let mut x = tree.as_ref().unwrap().borrow_mut();
@@ -52,13 +52,14 @@ pub fn bst_pop<T: Ord, U>(tree: &mut Option<U>) -> Result<T, ()>
 
     let popped = std::mem::replace(tree, successor);
     Ok(
-        popped.unwrap().into_inner().map_err(|_| ()) // map_err() call to satisfy the Debug trait bound
-        .unwrap().into_inner().pop() 
+        Rc::try_unwrap(popped.unwrap()).map_err(|_| ()) // map_err() call to satisfy the Debug trait bound
+        .unwrap().into_inner().pop()  
+
     )
 }
 
-pub fn bst_delete<T: Ord, U>(root: &mut Option<U>, key: &T) -> Option<T>
-    where U: TreeBranch<T>
+pub fn bst_delete<T: Ord, U>(root: &mut Option<TreeBranch<T, U>>, key: &T) -> Option<T>
+    where U: TreeBalance<T>
 {
 
     let (mut node_stack, mut tree_nav) = if let Some(root_node) = root {
@@ -66,7 +67,7 @@ pub fn bst_delete<T: Ord, U>(root: &mut Option<U>, key: &T) -> Option<T>
             Vec::with_capacity(root_node.borrow().get_height()),
             root_node.borrow().search(&key).map(
                 |path| {
-                    (path, root_node.clone())
+                    (path, Rc::clone(root_node))
                 }
             )
         )
@@ -85,7 +86,7 @@ pub fn bst_delete<T: Ord, U>(root: &mut Option<U>, key: &T) -> Option<T>
                     if let Some(path) = xnode
                         .borrow()
                         .search(&key) {
-                            (path, xnode.clone())
+                            (path, Rc::clone(xnode))
                     } else {
                         break; 
                     }
@@ -94,7 +95,7 @@ pub fn bst_delete<T: Ord, U>(root: &mut Option<U>, key: &T) -> Option<T>
                 }
             };
 
-            node_stack.push((xpath, pnode.clone()));
+            node_stack.push((xpath, Rc::clone(&pnode)));
             xpath = path;
             pnode = node;
         }
@@ -104,45 +105,47 @@ pub fn bst_delete<T: Ord, U>(root: &mut Option<U>, key: &T) -> Option<T>
         tree_nav
     };
 
-    let (owned_key, pnode) = {
+    // Perform node pop and return key
+    let owned_key = {
         let pnode;
         let mut p;
-        let (xtree, pnode_clone) = if let Some((path, node)) = tree_nav {
+        let xtree = if let Some((path, node)) = tree_nav {
+            node_stack.push((path, Rc::clone(&node)));
+
             pnode = node;
-            let clone = pnode.clone();
             p = pnode.borrow_mut();
-            (p.get_child_mut(path), Some(clone))
+            p.get_child_mut(path)
         } else {
-            (root, None)
+            root
         };
 
         // We found the node to delete, now we check if we need to perform a swap
         if let Ok(key) = bst_pop(xtree) {
             // No swap needed
-            (key, pnode_clone.unwrap())
+            key
         } else {
             // We need to swap with the bottom-left most node
             let mut xpath = Right;
             let next_path = Left;
 
-            let mut pnode = xtree.as_ref().unwrap().clone();
+            let mut pnode = Rc::clone(xtree.as_ref().unwrap());
             {
-                let mut swap_node = pnode.borrow().get_child(xpath).as_ref().unwrap().clone();
+                let mut swap_node = Rc::clone(pnode.borrow().get_child(xpath).as_ref().unwrap());
                 loop {
                     let node = {
                         let s = swap_node.borrow();
                         let next_tree = s.get_child(
                             next_path
                         );
-            
+
+                        node_stack.push((xpath, Rc::clone(&pnode)));
                         if let Some(next_node) = next_tree {
-                            next_node.clone()
+                            Rc::clone(next_node)
                         } else {
                             break;
                         }
                     };
-    
-                    node_stack.push((xpath, pnode));
+                    
                     pnode = swap_node;
                     swap_node = node;
     
@@ -157,18 +160,18 @@ pub fn bst_delete<T: Ord, U>(root: &mut Option<U>, key: &T) -> Option<T>
                         .get_child_mut(xpath)
                 ).unwrap();
 
-            (xtree.as_ref().unwrap().borrow_mut().replace_key(swap_key), pnode)
+            xtree.as_ref().unwrap().borrow_mut().replace_key(swap_key)
         }
     };
 
-    pnode.borrow_mut().update_height();
-
     while let Some((ppath, node)) = node_stack.pop() {
-        { node.borrow_mut().update_height(); }
+        let balance_path = {
+            let mut n = node.borrow_mut();
+            n.update_height();
+            n.rebalance(TreeOp::Delete(ppath))
+        };
 
-        if let Some((ppath, xpath)) =
-            node.rebalance(TreeOp::Delete(ppath))
-        {
+        if let Some((ppath, xpath)) = balance_path {
             bst_full_rotate(&node, ppath, xpath)
         }
     }
@@ -176,22 +179,26 @@ pub fn bst_delete<T: Ord, U>(root: &mut Option<U>, key: &T) -> Option<T>
     Some(owned_key)
 }
 
-pub fn bst_insert<T: Ord, U>(root: &mut Option<U>, key: T)
-    where U: TreeBranch<T>
+pub fn bst_insert<T: Ord, U>(root: &mut Option<TreeBranch<T, U>>, key: T)
+    where U: TreeBalance<T>
 {
     let (mut node_stack, (mut xpath, mut pnode)) = if let Some(root_node) = root {
         (
             Vec::with_capacity(root_node.borrow().get_height()),
             if let Some(path) = root_node.borrow().search(&key) {
-                (path, root_node.clone())
+                (path, Rc::clone(root_node))
             } else {
                 return
             }
         )
-    } else { 
+    } else {
+        let root_node = TreeNode::new_with(key);
+        root_node.mark_root();
         *root = Some(
-            U::new(
-                TreeNode::new_with(key)
+            Rc::new(
+                RefCell::new(
+                    root_node
+                )
             )
         );
         return
@@ -207,33 +214,41 @@ pub fn bst_insert<T: Ord, U>(root: &mut Option<U>, key: T)
                 if let Some(path) = xnode
                     .borrow()
                     .search(&key) {
-                        (path, xnode.clone())
+                        (path, Rc::clone(xnode))
                 } else {
                     return;
                 }
             } else {
                 *xtree = Some(
-                    U::new(TreeNode::new_with(key))
+                    Rc::new(
+                        RefCell::new(
+                            TreeNode::new_with(key)
+                        )
+                    )
                 );
                 p.update_height();
                 break;
             }
         };
 
-        node_stack.push((xpath, pnode.clone()));
+        node_stack.push((xpath, Rc::clone(&pnode)));
         xpath = path;
         pnode = node;
     }
 
     while let Some((ppath, node)) = node_stack.pop() {
-        { node.borrow_mut().update_height(); }
+        let balance_path = {
+            let mut n = node.borrow_mut();
+            n.update_height();
+            n.rebalance(TreeOp::Insert(ppath, xpath))
+        };
 
-        if let Some((ppath, xpath)) =
-            node.rebalance(TreeOp::Insert(ppath, xpath))
-        {
+        if let Some((ppath, xpath)) = balance_path {
             bst_full_rotate(&node, ppath, xpath)
         }
 
         xpath = ppath;
     }
+
+    root.as_ref().unwrap().borrow().mark_root()
 }

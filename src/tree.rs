@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use std::fmt::Display;
 use std::fmt::Debug;
 use std::cell::RefCell;
@@ -31,18 +32,16 @@ pub enum TreeOp {
 
 pub struct Tree<T: Ord, U>
 where
-    U: TreeBranch<T>,
+    U: TreeBalance<T>,
 {
-    _t: std::marker::PhantomData<T>,
-    root: Option<U>
+    root: Option<TreeBranch<T, U>>
 }
 
 impl <T: Ord, U> Tree<T, U>
-    where U: TreeBranch<T>
+    where U: TreeBalance<T>
 {
     pub fn new() -> Self {
         Tree::<T, U> {
-            _t: std::marker::PhantomData,
             root: None
         }
     }
@@ -60,38 +59,40 @@ impl <T: Ord, U> Tree<T, U>
     }
 }
 
-pub type TreeNodeRef<T, U> = RefCell<TreeNode<T, U>>;
+pub type TreeBranch<T, U> = Rc<RefCell<TreeNode<T, U>>>;
 
-pub trait TreeBranch<T: Ord>
-where
-    Self: std::ops::Deref<Target=TreeNodeRef<T, Self>>,
-    Self: std::marker::Sized,
-    Self: Clone
+pub trait TreeBalance<T: Ord>
+    where Self: std::marker::Sized
 {
-    fn new(node: TreeNode<T, Self>) -> Self;
-    fn rebalance(&self, op: TreeOp) -> Option<(TreeDir, TreeDir)>;
-    fn into_inner(self) -> Result<TreeNodeRef<T, Self>, Self>;
+    fn new() -> Self;
+    fn rebalance(&mut self,
+        node: &TreeNode<T, Self>,
+        op: TreeOp
+    ) -> Option<(TreeDir, TreeDir)>;
+    fn mark_root(&mut self);
 }
 
 pub struct TreeNode<T: Ord, U>
-    where U: TreeBranch<T>
+    where U: TreeBalance<T>
 {
     key: T,
     height: usize,
-    left: Option<U>,
-    right: Option<U>,
+    left: Option<TreeBranch<T, U>>,
+    right: Option<TreeBranch<T, U>>,
+    balance: RefCell<U>
 }
 
 impl <T: Ord, U> TreeNode<T, U>
-    where U: TreeBranch<T>
+    where U: TreeBalance<T>
 {
 
-    pub fn new_with(key: T) -> Self {
+    fn new_with(key: T) -> Self {
         TreeNode {
             key,
             height: 1,
             left: None,
-            right: None
+            right: None,
+            balance: RefCell::new(U::new())
         }
     }
 
@@ -102,21 +103,21 @@ impl <T: Ord, U> TreeNode<T, U>
         ) + 1;
     }
 
-    pub fn get_child(&self, pos: TreeDir) -> &Option<U> {
+    pub fn get_child(&self, pos: TreeDir) -> &Option<TreeBranch<T, U>> {
         match pos {
             Left => &self.left,
             Right => &self.right
         }
     }
 
-    pub fn get_child_mut(&mut self, pos: TreeDir) -> &mut Option<U> {
+    pub fn get_child_mut(&mut self, pos: TreeDir) -> &mut Option<TreeBranch<T, U>> {
         match pos {
             Left => &mut self.left,
             Right => &mut self.right
         }
     }
 
-    pub fn prune(&mut self, pos: TreeDir) -> Option<U> {
+    pub fn prune(&mut self, pos: TreeDir) -> Option<TreeBranch<T, U>> {
         match pos {
             Left => self.left.take(),
             Right => self.right.take()
@@ -155,6 +156,20 @@ impl <T: Ord, U> TreeNode<T, U>
         key
     }
 
+    pub fn rebalance(&self, op: TreeOp) -> Option<(TreeDir, TreeDir)> {
+        self.balance.borrow_mut().rebalance(self, op)
+    }
+
+    pub fn mark_root(&self) {
+        self.balance.borrow_mut().mark_root()
+    }
+
+    pub fn update_balance<F, R>(&self, op: F) -> R
+    where F: FnOnce(&mut U) -> R
+    {
+        op(&mut self.balance.borrow_mut())
+    }
+
 }
 
   /*********************/
@@ -164,7 +179,7 @@ impl <T: Ord, U> TreeNode<T, U>
 impl <T, U> Display for Tree<T, U>
 where
     T: Ord + Display,
-    U: TreeBranch<T>
+    U: TreeBalance<T>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         match &self.root {
@@ -179,7 +194,7 @@ where
 impl <T, U> Debug for Tree<T, U>
 where
     T: Ord + Debug,
-    U: TreeBranch<T>
+    U: TreeBalance<T> + Debug
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         match &self.root {
@@ -194,7 +209,7 @@ where
 impl <T, U> Display for TreeNode<T, U>
 where
     T: Ord + Display,
-    U: TreeBranch<T>
+    U: TreeBalance<T>
 {
 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
@@ -213,10 +228,11 @@ where
 impl <T, U> Debug for TreeNode<T, U>
 where
     T: Ord + Debug,
-    U: TreeBranch<T>
+    U: TreeBalance<T> + Debug
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         let mut builder = f.debug_struct(&format!("{:?}", &self.key));
+        builder.field("balance", &self.balance.borrow());
         builder.field("height", &self.height);
         match self.right {
             Some(ref node) => builder.field("right", &node.borrow()),

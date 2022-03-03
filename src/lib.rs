@@ -3,14 +3,15 @@ mod tree;
 mod redblack;
 
 pub type Tree<T, U> = tree::Tree<T, U>;
-pub type AVLTree<T> = Tree<T, avl::AVLBranch<T>>;
+pub type AVLTree<T> = Tree<T, avl::AVLBalance>;
+pub type RedBlackTree<T> = Tree<T, redblack::RedBlackBalance>;
 
 #[cfg(test)]
 mod tests {
-    use super::AVLTree;
+    use super::{AVLTree, RedBlackTree};
 
     #[test]
-    fn manual_check_order() {
+    fn manual_avl_check_insert() {
         let nums = [
             40, 65, 55,
             57, 58, 75, 60, 59
@@ -25,7 +26,7 @@ mod tests {
     }
 
     #[test]
-    fn manual_check_delete() {
+    fn manual_avl_check_delete() {
         let nums = [
             40, 65, 55,
             57, 58, 75, 60, 59
@@ -35,8 +36,22 @@ mod tests {
         for num in &nums {
             tree.insert(*num);
         }
-        println!("----- Insert: {} -------", 40);
-        assert_eq!(tree.delete(&40), Some(40));
+        assert_eq!(tree.delete(&60), Some(60));
         println!("{:#?}", tree);
+    }
+
+    #[test]
+    fn manual_rb_check_insert() {
+        let nums = [
+            40, 65, 55,
+            57, 58, 75, 60, 59
+        ];
+        let mut tree: RedBlackTree<u32> = RedBlackTree::new();
+
+        for num in &nums {
+            println!("----- Insert: {} -------", num);
+            tree.insert(*num);
+            println!("{:#?}", tree);
+        }
     }
 }
