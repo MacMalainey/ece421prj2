@@ -21,8 +21,7 @@ impl <T: Ord> TreeBalance<T> for RedBlackBalance {
                     let xcolor = p.get_child(xpath).as_ref().unwrap().borrow().update_balance(|b| b.0);
                     if xcolor == Red {
                         self.0 = Red;
-                        p.update_balance(|b| b.0 = Black);
-                        return node.get_child(ppath.reflect()).as_ref()
+                        let change = node.get_child(ppath.reflect()).as_ref()
                             .map_or(
                                 Some((ppath, xpath)),
                                 |unode| {
@@ -35,7 +34,13 @@ impl <T: Ord> TreeBalance<T> for RedBlackBalance {
                                         }
                                     }
                                 }
-                            )
+                            );
+                        if change.is_some() && ppath != xpath {
+                            p.get_child(xpath).as_ref().unwrap().borrow().update_balance(|b| b.0 = Black);
+                        } else {
+                            p.update_balance(|b| b.0 = Black);
+                        }
+                        return change
                     }
                 }
                 None
