@@ -1,69 +1,63 @@
 use std::fmt::Debug;
-use super::tree::*;
-use super::tree::TreeDir::*;
+use crate::tree::*;
+use crate::inspect::*;
 
 pub struct AVLBalance();
 
-impl <T: Ord> TreeBalance<T> for AVLBalance {
-    fn rebalance(&mut self, node: &TreeNode<T, Self>, op: TreeOp) -> Option<(TreeDir, TreeDir)> {
-        match op {
-            TreeOp::Insert(ppath, xpath) => {
-                let rebalance = {
-                    avl_check(node.get_child(ppath), node.get_child(ppath.reflect()))
-                };
-    
-                if rebalance {
-                    Some((ppath, xpath))
-                } else {
-                    None
-                }
-            },
-            // For deletion we treat the definitions as flipped (parent path becomes longer path)
-            TreeOp::Delete(upath) => {
-                let ppath = upath.reflect();
-                let rebalance = {
-                    avl_check(node.get_child(ppath), node.get_child(upath))
-                };
-                if rebalance {
-                    let r = node;
-                    let pnode = r.get_child(ppath).as_ref().unwrap();
-                    let xpath = {
-                        let p = pnode.borrow();
-                        p.get_child(Left)
-                            .as_ref()
-                            .map_or(
-                                Right,
-                                |xlnode| {
-                                    let xr_height = p.get_child(Right).as_ref().map_or(0, |xrnode| xrnode.borrow().get_height());
-                                    if xr_height > xlnode.borrow().get_height() {
-                                        Right
-                                    } else {
-                                        Left
-                                    }
-                                }
-                            )
-                    };
+impl TreeBalance for AVLBalance {
 
-                    Some((ppath, xpath))
-                } else {
-                    None
-                }
-            }
+    fn rebalance_insert<T: Ord>(node: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> NextTreePosition<T, Self> {
+        let rebalance = {
+            let pheight = node.inspect_child(path.0).unwrap().inspect_height();
+            let uheight = node.inspect_child(path.0.reflect()).map_or(0, |b| b.inspect_height());
+
+            pheight - uheight > 1
+        };
+
+        if rebalance {
+            node.rotate(path).into_next_position(TreePosition::Root)
+        } else {
+            node.into_next_position(TreePosition::Parent)
         }
+
     }
 
     fn new() -> Self {
         AVLBalance()
     }
 
-    fn mark_root(&mut self) {}
-}   
+    fn new_root() -> Self {
+        AVLBalance()
+    }
 
-pub fn avl_check<T: Ord>(parent: &Option<TreeBranch<T, AVLBalance>>, uncle: &Option<TreeBranch<T, AVLBalance>>) -> bool {
-    let uheight = uncle.as_ref().map_or(0, |node| node.borrow().get_height());
-    let pheight = parent.as_ref().map_or(0, |node| node.borrow().get_height());
+    fn rebalance_delete<T: Ord>(node: NodeInspector<T, Self>, upath: TreePath, _: &Self) -> NextTreePosition<T, Self> {
+        let ppath = upath.reflect();
+        let rebalance = {
+            let pheight = node.inspect_child(ppath).map_or(0, |b| b.inspect_height());
+            let uheight = node.inspect_child(upath).map_or(0, |b| b.inspect_height());
 
-    pheight - uheight > 1
+            pheight - uheight > 1
+        };
+
+        if rebalance {
+            // Get child path
+            let xpath = {
+                let pnode = node.inspect_child(ppath).unwrap();
+                let inline_height = pnode.inspect_child(ppath).map_or(0, |x| x.inspect_height());
+                let elbow_height = pnode.inspect_child(ppath.reflect()).map_or(0, |x| x.inspect_height());
+
+                // Optimize selection to prevent unneccessary rotation
+                if inline_height >= elbow_height {
+                    ppath
+                } else {
+                    ppath.reflect()
+                }
+            };
+            node.rotate((ppath, xpath)).into_next_position(TreePosition::Parent)
+        } else {
+            node.into_next_position(TreePosition::Parent)
+        }
+    }
 }
 
 impl Debug for AVLBalance {

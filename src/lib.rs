@@ -1,8 +1,10 @@
 mod avl;
-mod tree;
+pub mod tree;
+pub mod ops;
+pub mod inspect;
 mod redblack;
 
-pub type Tree<T, U> = tree::Tree<T, U>;
+use tree::Tree;
 pub type AVLTree<T> = Tree<T, avl::AVLBalance>;
 pub type RedBlackTree<T> = Tree<T, redblack::RedBlackBalance>;
 
@@ -36,7 +38,7 @@ mod tests {
         for num in &nums {
             tree.insert(*num);
         }
-        assert_eq!(tree.delete(&60), Some(60));
+        assert_eq!(tree.delete(&65), Some(65));
         println!("{:#?}", tree);
     }
 
@@ -53,5 +55,20 @@ mod tests {
             tree.insert(*num);
             println!("{:#?}", tree);
         }
+    }
+
+    #[test]
+    fn manual_rb_check_delete() {
+        let nums = [
+            40, 65, 55,
+            57, 58, 75, 60, 59
+        ];
+        let mut tree: RedBlackTree<u32> = RedBlackTree::new();
+
+        for num in &nums {
+            tree.insert(*num);
+        }
+        assert_eq!(tree.delete(&55), Some(55));
+        println!("{:#?}", tree);
     }
 }
