@@ -263,8 +263,7 @@ pub fn bst_pop<T: Ord, U: TreeBalance>(tree: &mut Tree<T, U>) -> Option<(T, U)> 
     let popped = std::mem::replace(tree, successor);
     Some(
         Rc::try_unwrap(popped.into_inner().unwrap()).map_err(|_| ()) // map_err() call to satisfy the Debug trait bound
-        .unwrap().into_inner().pop()  
-
+        .unwrap().into_inner().pop()
     )
 }
 
@@ -306,4 +305,17 @@ pub fn bst_rotate<T: Ord, U: TreeBalance>(p: TreeBranch<T, U>, direction: TreePa
     }
 
     x
+}
+
+pub fn bst_search<T: Ord, U: TreeBalance>(root: &Tree<T, U>, key: &T) -> bool {
+    let mut next = root.branch().map(|b| Rc::clone(b));
+    while let Some(n) = next {
+        let node = n.borrow();
+        next = match node.search(key) {
+            None => return true,
+            Some(path) => node.get_child(path).map(|b| Rc::clone(b))
+        };
+    }
+
+    false
 }

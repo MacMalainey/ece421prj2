@@ -1,8 +1,8 @@
-mod avl;
+pub mod avl;
 pub mod tree;
 pub mod ops;
 pub mod inspect;
-mod redblack;
+pub mod redblack;
 
 use tree::Tree;
 pub type AVLTree<T> = Tree<T, avl::AVLBalance>;
@@ -38,7 +38,7 @@ mod tests {
         for num in &nums {
             tree.insert(*num);
         }
-        assert_eq!(tree.delete(&65), Some(65));
+        assert_eq!(tree.delete(&40), Some(40));
         println!("{:#?}", tree);
     }
 
