@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::tree::{TreeBalance, TreePath};
+use crate::tree::TreePath;
 use crate::tree::inspect::*;
 
 use RBColor::*;
@@ -18,41 +18,47 @@ impl TreeBalance for RedBlackBalance {
     fn rebalance_insert<T: Ord>(mut node: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> TreePosition<T, Self> {
 
         // Get the parent and uncle colors
-        let (pcolor, ucolor) = {
+        let (xcolor, pcolor, ucolor) = {
+            let pnode = node.inspect_child(path.0).unwrap();
             (
-                node.inspect_child(path.0).unwrap().inspect_balance(|b| b.0),
+                pnode.inspect_child(path.1).map_or(Black, |n| n.inspect_balance(|b| b.0)),
+                pnode.inspect_balance(|b| b.0),
                 node.inspect_child(path.0.reflect()).map_or(Black, |n| n.inspect_balance(|b| b.0))
             )
         };
 
-        match (pcolor, ucolor) {
-            // Perform recoloring
-            (Red, Red) => {
-                { 
-                    node.inspect_child(TreePath::Right).unwrap().update_balance(|b| b.0 = Black);
-                }
-                {
-                    node.inspect_child(TreePath::Left).unwrap().update_balance(|b| b.0 = Black); }
-                {
-                    if !node.inspect_is_root() {
-                        node.update_balance(|b| b.0 = Red);
+        // Handle case when we have recolored and we need to make it to the next parent
+        if node.inspect_balance(|b| b.0) == Red && pcolor == Red {
+            node.into_position(NodeOffset::Parent)
+        } else if xcolor == Black { // Don't have double red case
+            node.into_position(NodeOffset::Root)
+        } else {
+            match (pcolor, ucolor) {
+                // Perform recoloring
+                (Red, Red) => {
+                    {
+                        node.inspect_child(TreePath::Right).unwrap().update_balance(|b| b.0 = Black);
                     }
-                }
-            },
-            // Perform rotation
-            (Red, Black) => {
-                node = node.rotate(path);
-                { node.inspect_child(path.0.reflect()).unwrap().update_balance(|b| b.0 = Red);}
-                { node.update_balance(|b| b.0 = Black); }
-            },
-            // Do nothing
-            (Black, _) => ()
+                    {
+                        node.inspect_child(TreePath::Left).unwrap().update_balance(|b| b.0 = Black); }
+                    {
+                        if !node.inspect_is_root() {
+                            node.update_balance(|b| b.0 = Red);
+                        }
+                    }
+                    node.into_position(NodeOffset::Parent)
+                },
+                // Perform rotation
+                (Red, Black) => {
+                    node = node.rotate(path);
+                    { node.inspect_child(path.0.reflect()).unwrap().update_balance(|b| b.0 = Red);}
+                    { node.update_balance(|b| b.0 = Black); }
+                    node.into_position(NodeOffset::Root)
+                },
+                // Do nothing
+                (Black, _) => node.into_position(NodeOffset::Root)
+            }
         }
-
-        // We shouldn't need to continue to check for a
-        // rebalance unless we performed a recolor only...
-        // todo: verify if the tree works if we return root for all cases except recolor
-        node.into_position(NodeOffset::Parent)
 
     }
 
@@ -129,15 +135,107 @@ impl TreeBalance for RedBlackBalance {
                 node.into_position(NodeOffset::Child(xpath))
             }
         } else {
-            // Nothing to do, return to root
+            // Nothing to do other than recolor and, return to root
+            { node.inspect_child(xpath).unwrap().update_balance(|b| b.0 = Black);}
             node.into_position(NodeOffset::Root)
         }
         
+    }
+
+    fn adjust_root(&mut self) {
+        self.0 = Black
     }
 }
 
 impl Debug for RedBlackBalance {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         write!(f, "{:?}", self.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::RedBlackBalance;
+    use crate::Tree;
+
+    #[test]
+    fn insert_unbalanced() {
+        let mut tree: Tree<u32, RedBlackBalance> = Tree::new();
+
+        tree.insert(40);
+        tree.insert(50);
+        tree.insert(60);
+        assert_eq!(tree.height(), 2)
+    }
+
+    #[test]
+    fn insert_skewed() {
+        let mut tree: Tree<u32, RedBlackBalance> = Tree::new();
+
+        tree.insert(40);
+        tree.insert(50);
+        tree.insert(60);
+        tree.insert(70);
+        tree.insert(80);
+        tree.insert(90);
+        assert_eq!(tree.height(), 4)
+    }
+
+    #[test]
+    fn insert_recolor_rebalance() {
+        let mut tree: Tree<u32, RedBlackBalance> = Tree::new();
+
+        tree.insert(40);
+        tree.insert(50);
+        tree.insert(60);
+        tree.insert(70);
+        tree.insert(90);
+        tree.insert(80);
+        tree.insert(100);
+        tree.insert(110);
+        assert_eq!(tree.height(), 4)
+    }
+
+    #[test]
+    fn delete_red() {
+        let mut tree: Tree<u32, RedBlackBalance> = Tree::new();
+
+        tree.insert(40);
+        tree.insert(50);
+        tree.insert(60);
+        tree.insert(70);
+        tree.delete(&40);
+        assert_eq!(tree.height(), 2)
+    }
+
+    #[test]
+    fn delete_recolor() {
+        let mut tree: Tree<u32, RedBlackBalance> = Tree::new();
+
+        tree.insert(40);
+        tree.insert(50);
+        tree.insert(60);
+        tree.insert(70);
+        tree.insert(90);
+        tree.insert(80);
+        tree.delete(&90);
+        tree.delete(&80);
+        assert_eq!(tree.height(), 3)
+    }
+
+    #[test]
+    fn delete_child_red() {
+        let mut tree: Tree<u32, RedBlackBalance> = Tree::new();
+
+        tree.insert(40);
+        tree.insert(50);
+        tree.insert(60);
+        tree.insert(70);
+        tree.insert(90);
+        tree.insert(80);
+        tree.delete(&90);
+        tree.delete(&80);
+        tree.delete(&40);
+        assert_eq!(tree.height(), 2)
     }
 }

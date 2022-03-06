@@ -202,7 +202,12 @@ pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T,
             if let Some((key, balance)) = popped {
                 match position {
                     DeletePosition::Child(p, path) => (key, balance, p, path),
-                    DeletePosition::Root => return (root_keep_alive, Some(key))
+                    DeletePosition::Root => {
+                        if let Some(r) = root_keep_alive.branch() {
+                            r.borrow_mut().mark_root()
+                        }
+                        return (root_keep_alive, Some(key))
+                    }
                 }
             } else {
                 // Store the node we will swap with (original x)

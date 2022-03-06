@@ -168,11 +168,6 @@ impl <T: Ord, U: TreeBalance> TreeNode<T, U> {
     /// # Panics
     /// 
     /// The function panics if the key of the child node and this node match
-    /// ```rust,should_panic
-    /// # use project2::tree::TreeNode;
-    ///
-    /// TreeNode::new_with(2).find_placement(&TreeNode::new_with(2))
-    /// ```
     pub fn find_placement(&self, child: &TreeNode<T, U>) -> TreePath {
         self.search(&child.key).unwrap()
     }
@@ -204,6 +199,9 @@ impl <T: Ord, U: TreeBalance> TreeNode<T, U> {
         key
     }
 
+    pub fn mark_root(&mut self) {
+        self.balance.adjust_root();
+    }
 }
 
 impl <T, U> Display for TreeNode<T, U>

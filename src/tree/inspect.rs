@@ -192,3 +192,43 @@ impl <'a, T: Ord, U: TreeBalance> InspectNode<'a, T, U> for BranchInspector<'a, 
 
 }
 
+/// Balance trait for a [Tree]
+/// 
+/// The [TreeBalance] associated with a [Tree] will be used for 
+/// rebalancing the tree after insert and delete operations
+pub trait TreeBalance
+    where Self: std::marker::Sized
+{
+    /// Returns a new balance for a generic node
+    fn new() -> Self;
+
+    /// Returns a new balance for a root node
+    fn new_root() -> Self;
+
+    /// Perform a rebalance after an insertion operation
+    /// 
+    /// Rebalance the tree starting at a given node and return the next
+    /// position that should be inspected for rebalancing.
+    /// The tree is inspectable through the passed [NodeInspector] object and
+    /// rotations can be performed on the tree used it.
+    /// The path of the operation is provided in format (Parent Insertion Path, Child Insertion Path)
+    /// 
+    /// Returns the next position to rebalance in relation to the node currently being balanced
+    fn rebalance_insert<T: Ord>(inspector: inspect::NodeInspector<T, Self>, path: (TreePath, TreePath)) -> TreePosition<T, Self>;
+
+    /// Perform a rebalance after a delete operation
+    /// 
+    /// Rebalance the tree starting at a given node and return the next
+    /// position that should be inspected for rebalancing.
+    /// The tree is inspectable through the passed [NodeInspector] object and
+    /// rotations can be performed on the tree used it.
+    /// The path provided is the path that the child was deleted from in relation to the current node.
+    /// The balance from the deleted node is also provided.
+    /// 
+    /// Returns the next position to rebalance in relation to the node currently being balanced
+    fn rebalance_delete<T: Ord>(inspector: inspect::NodeInspector<T, Self>, path: TreePath, balance: &Self) -> TreePosition<T, Self>;
+
+    /// Called when a new node moves into the root location after a delete operation
+    fn adjust_root(&mut self);
+}
+

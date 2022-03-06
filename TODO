@@ -1,23 +1,23 @@
 [x] - Refactor for privatization
 
-[] - Write tests
-    [] - Red Black Tree
-        [] - Insert Cases
-            [] - (R, R)
-            [] - (R, B)
-            [] - (B, _)
-        [] - Delete Cases
-            [] - (R, _)
-            [] - (B, R)
-            [] - (B, B(R))
-            [] - (B, B(B))
-    [] - AVL Tree
-        [] - Insert Case
-            [] - Balanced
-            [] - Unbalanced
-        [] - Delete Case
-            [] - Balanced
-            [] - Unbalanced
+[x] - Write tests
+    [x] - Red Black Tree
+        [x] - Insert Cases
+            [x] - (R, R)
+            [x] - (R, B)
+            [x] - (B, _)
+        [x] - Delete Cases
+            [x] - (R, _)
+            [x] - (B, R)
+            [x] - (B, B(R))
+            [x] - (B, B(B))
+    [x]] - AVL Tree
+        [x] - Insert Case
+            [x] - Balanced
+            [x] - Unbalanced
+        [x] - Delete Case
+            [x] - Balanced
+            [x] - Unbalanced
 
 [x] - Write unbalanced tree
 

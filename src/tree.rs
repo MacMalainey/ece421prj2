@@ -8,6 +8,7 @@ pub mod inspect;
 mod node;
 
 use node::TreeNode;
+use inspect::TreeBalance;
 
 /// Enum for describing the path from one node to its child
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -59,7 +60,7 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
     }
 
     /// Creates a new tree, wraping the given [TreeBranch]
-    pub fn new_with(branch: TreeBranch<T, U>) -> Self {
+    fn new_with(branch: TreeBranch<T, U>) -> Self {
         Tree(Some(branch))
     }
 
@@ -201,23 +202,6 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
     /// 
     /// Returns a reference to the [TreeBranch] that this tree wraps
     /// to make traversal more convient when performing operations on the tree
-    /// 
-    /// ```
-    /// # use project2::tree::{Tree, TreeNode};
-    /// # use project2::avl::AVLBalance;
-    /// let tree = Tree::<usize, AVLBalance>::new();
-    /// 
-    /// assert!(tree.branch().is_none());
-    /// 
-    /// let tree = Tree::<usize, AVLBalance>::new_with(
-    ///     std::rc::Rc::new(
-    ///         std::cell::RefCell::new(
-    ///             TreeNode::new_with(2)
-    ///         )
-    ///     )
-    /// );
-    /// assert!(tree.branch().is_some())
-    /// ```
     fn branch(&self) -> Option<&TreeBranch<T, U>> {
         self.0.as_ref()
     }
@@ -226,23 +210,6 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
     /// 
     /// Returns the [TreeBranch] that this [Tree] wraps
     /// consuming the [Tree] in the process
-    /// 
-    /// ```
-    /// # use project2::tree::{Tree, TreeNode};
-    /// # use project2::avl::AVLBalance;
-    /// let tree = Tree::<usize, AVLBalance>::new();
-    /// 
-    /// assert!(tree.into_inner().is_none());
-    /// 
-    /// let tree = Tree::<usize, AVLBalance>::new_with(
-    ///     std::rc::Rc::new(
-    ///         std::cell::RefCell::new(
-    ///             TreeNode::new_with(2)
-    ///         )
-    ///     )
-    /// );
-    /// assert!(tree.into_inner().is_some())
-    /// ```
     fn into_inner(self) -> Option<TreeBranch<T, U>> {
         self.0
     }
@@ -254,43 +221,6 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
 type TreeBranch<T, U> = Rc<RefCell<TreeNode<T, U>>>;
 /// Shorthand type for pointer to a parent [TreeNode]
 type TreeTrunk<T, U> = Weak<RefCell<TreeNode<T, U>>>;
-
-/// Balance trait for a [Tree]
-/// 
-/// The [TreeBalance] associated with a [Tree] will be used for 
-/// rebalancing the tree after insert and delete operations
-pub trait TreeBalance
-    where Self: std::marker::Sized
-{
-    /// Returns a new balance for a generic node
-    fn new() -> Self;
-
-    /// Returns a new balance for a root node
-    fn new_root() -> Self;
-
-    /// Perform a rebalance after an insertion operation
-    /// 
-    /// Rebalance the tree starting at a given node and return the next
-    /// position that should be inspected for rebalancing.
-    /// The tree is inspectable through the passed [NodeInspector] object and
-    /// rotations can be performed on the tree used it.
-    /// The path of the operation is provided in format (Parent Insertion Path, Child Insertion Path)
-    /// 
-    /// Returns the next position to rebalance in relation to the node currently being balanced
-    fn rebalance_insert<T: Ord>(inspector: inspect::NodeInspector<T, Self>, path: (TreePath, TreePath)) -> inspect::TreePosition<T, Self>;
-
-    /// Perform a rebalance after a delete operation
-    /// 
-    /// Rebalance the tree starting at a given node and return the next
-    /// position that should be inspected for rebalancing.
-    /// The tree is inspectable through the passed [NodeInspector] object and
-    /// rotations can be performed on the tree used it.
-    /// The path provided is the path that the child was deleted from in relation to the current node.
-    /// The balance from the deleted node is also provided.
-    /// 
-    /// Returns the next position to rebalance in relation to the node currently being balanced
-    fn rebalance_delete<T: Ord>(inspector: inspect::NodeInspector<T, Self>, path: TreePath, balance: &Self) -> inspect::TreePosition<T, Self>;
-}
 
 impl <T, U> Display for Tree<T, U>
 where

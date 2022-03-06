@@ -14,6 +14,8 @@ mod tests {
     use super::{AVLTree, RedBlackTree};
 
     #[test]
+    #[ignore]
+    // Always passes, used for manual verification and inspection
     fn manual_avl_check_insert() {
         let nums = [
             40, 65, 55,
@@ -29,6 +31,8 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
+    // Always passes, used for manual verification and inspection
     fn manual_avl_check_delete() {
         let nums = [
             40,
@@ -46,10 +50,13 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
+    // Always passes, used for manual verification and inspection
     fn manual_rb_check_insert() {
         let nums = [
-            40, 65, 55,
-            57, 58, 75, 60, 59
+            40, 50, 60, 70, 90, 80, 100, 110
+            // 40, 65, 55,
+            // 57, 58, 75, 60, 59
         ];
         let mut tree: RedBlackTree<u32> = RedBlackTree::new();
 
@@ -60,18 +67,21 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn manual_rb_check_delete() {
-    //     let nums = [
-    //         40, 65, 55,
-    //         57, 58, 75, 60, 59
-    //     ];
-    //     let mut tree: RedBlackTree<u32> = RedBlackTree::new();
+    #[test]
+    // #[ignore]
+    // Always passes, used for manual verification and inspection
+    fn manual_rb_check_delete() {
+        let nums = [
+            40, 50, 60, 70, 90, 80
+        ];
+        let mut tree: RedBlackTree<u32> = RedBlackTree::new();
 
-    //     for num in &nums {
-    //         tree.insert(*num);
-    //     }
-    //     assert_eq!(tree.delete(&55), Some(55));
-    //     println!("{:#?}", tree);
-    // }
+        for num in &nums {
+            tree.insert(*num);
+        }
+        assert_eq!(tree.delete(&90), Some(90));
+        assert_eq!(tree.delete(&80), Some(80));
+        assert_eq!(tree.delete(&40), Some(40));
+        println!("{:#?}", tree);
+    }
 }
