@@ -1,4 +1,4 @@
-[] - Refactor for privatization
+[x] - Refactor for privatization
 
 [] - Write tests
     [] - Red Black Tree
@@ -19,7 +19,7 @@
             [] - Balanced
             [] - Unbalanced
 
-[] - Write unbalanced tree
+[x] - Write unbalanced tree
 
 [] - CLI
     [] - Allow choosing of the type tree (and switching between them)

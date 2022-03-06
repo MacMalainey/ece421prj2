@@ -1,10 +1,13 @@
 pub mod avl;
 pub mod tree;
 pub mod redblack;
+mod unbalanced; // Left private because if anyone really requires it, they can just use the typedef
 
 use tree::Tree;
+// Typedefs for easy access
 pub type AVLTree<T> = Tree<T, avl::AVLBalance>;
 pub type RedBlackTree<T> = Tree<T, redblack::RedBlackBalance>;
+pub type BinarySearchTree<T> = Tree<T, unbalanced::UnbalancedBalance>;
 
 #[cfg(test)]
 mod tests {
