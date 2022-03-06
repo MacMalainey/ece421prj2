@@ -129,9 +129,19 @@ multiple different node types (binary tree node, multi-key node, etc) and have m
 
 \section{Known Issues}
 
-\subsection{Red Black Tree}
-
 \subsection{TreeBalance Trait Implementation}
+The implementation of the TreeBalance trait is not as robust as it could be and is lacking some important features.
+However these features have no impact on whether or not the AVL Tree and Red Black Tree work correctly.
+
+\noindent The issue is that simply right now you cannot:
+\begin{itemize}
+    \item Travel more than one node (other than going to root) when returning the next position to go on the tree from a rebalance function.
+    \item Travel to a child node when returning the next position to go on the tree from the [rebalance\_insert] function.
+\end{itemize}
+
+This feature loss might cause a minor performance impact for the Red Black Tree as it has a case where it is beneficial
+to move up two parents at once.  However we have implemented a fix for this, but it might be slower as it still requires
+checking the surrounding node's colors before deciding it is that special case and moves up a parent again.
 
 \section{Benchmarking}
 

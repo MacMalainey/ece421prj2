@@ -8,13 +8,14 @@ use super::inspect::*;
 /// Perform an insertion using a given key
 /// on a binary tree with the given root
 /// 
-/// # Issues
+/// # Panics
 /// 
-/// Behaviour is undefined if root is actually the root of a subtree 
-/// and not the full tree (need to add panic if root has a parent node)
+/// This function panics if the root node is not actually the root node (has a parent)
 pub fn bst_insert<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: T) -> Tree<T, U> {
     // Unwrap the root
     if let Some(mut p) = root.branch().map(|r| Rc::clone(r)) {
+        // Ensure root is the actual root
+        { assert!(p.borrow().get_parent().is_none()) };
         // Find the parent node to insert to and the path to insert on...
         // Or if the tree is empty we insert at root and be done
         let mut xpath;
@@ -140,14 +141,15 @@ enum DeletePosition<T: Ord, U: TreeBalance> {
 /// Perform a deletion using a given key on a binary
 /// tree with the given root and return the key
 /// 
-/// # Issues
+/// # Panics
 /// 
-/// Behaviour is undefined if root is actually the root of a subtree 
-/// and not the full tree (should add panic if root has a parent node)
+/// This function panics if the root node is not actually the root node (has a parent)
 pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T, U>, Option<T>) {
     // Find the parent node of the node we wish to delete
     // Or if the tree is empty we just return root
     if let Some(mut p) = root.into_inner() {
+        // Ensure root is the actual root
+        { assert!(p.borrow().get_parent().is_none()) };
         // DO NOT LET THIS VARIABLE DIE OTHERWISE THE TREE WILL BEGIN TO DEALLOCATE
         let mut root_keep_alive = Tree::new_with(Rc::clone(&p));
         let mut xpath = {

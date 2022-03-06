@@ -213,7 +213,11 @@ pub trait TreeBalance
     /// rotations can be performed on the tree used it.
     /// The path of the operation is provided in format (Parent Insertion Path, Child Insertion Path)
     /// 
-    /// Returns the next position to rebalance in relation to the node currently being balanced
+    /// Returns the next position to rebalance in relation to the node currently being balanced.
+    /// 
+    /// # Issues
+    /// 
+    /// Will cause a panic if it returns NodeOffset::Child
     fn rebalance_insert<T: Ord>(inspector: inspect::NodeInspector<T, Self>, path: (TreePath, TreePath)) -> TreePosition<T, Self>;
 
     /// Perform a rebalance after a delete operation

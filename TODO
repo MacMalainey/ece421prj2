@@ -53,16 +53,9 @@
             [x] - What components do the Red-Black tree and AVL tree have in common?
             [x] - How do we construct our design to "allow it to be efficiently and effectively extended"? (examples: 2-3-4 tree, B-tree)
         [x] - Rationalle
-    [] - Known errors, faults, defects, missing functionality
-        [] - Check for Red-Black Tree errors
-            [] - Document if any
-        [] - Optimize Red-Black Tree Insert case
-            [] - Document if not optimized
-            [] - Reference in benchmarks section
-        [] - Missing functionality for DIY balance API
-            [] - Only move once relative to node (Lacking Robustness)
-            [] - Only function operations on Balance objects (Lacking Cleanliness)
-            [] - Lacking error handling for if root has parent at start of bst_insert and bst_delete (Not user facing, however will prevent internal crate bugs)
+    [x] - Known errors, faults, defects, missing functionality
+        [x] - Missing functionality for DIY balance API
+            [x] - Only move once relative to node (Lacking Robustness)
     [] - User Manual
         [] - Using a Tree
         [] - Using pre-made balances
