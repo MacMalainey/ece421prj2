@@ -30,7 +30,9 @@ mod tests {
     #[test]
     fn manual_avl_check_delete() {
         let nums = [
-            40, 65, 55,
+            40,
+            65,
+            55,
             57, 58, 75, 60, 59
         ];
         let mut tree: AVLTree<u32> = AVLTree::new();
@@ -38,7 +40,7 @@ mod tests {
         for num in &nums {
             tree.insert(*num);
         }
-        assert_eq!(tree.delete(&40), Some(40));
+        assert_eq!(tree.delete(&55), Some(55));
         println!("{:#?}", tree);
     }
 
@@ -57,18 +59,18 @@ mod tests {
         }
     }
 
-    #[test]
-    fn manual_rb_check_delete() {
-        let nums = [
-            40, 65, 55,
-            57, 58, 75, 60, 59
-        ];
-        let mut tree: RedBlackTree<u32> = RedBlackTree::new();
+    // #[test]
+    // fn manual_rb_check_delete() {
+    //     let nums = [
+    //         40, 65, 55,
+    //         57, 58, 75, 60, 59
+    //     ];
+    //     let mut tree: RedBlackTree<u32> = RedBlackTree::new();
 
-        for num in &nums {
-            tree.insert(*num);
-        }
-        assert_eq!(tree.delete(&55), Some(55));
-        println!("{:#?}", tree);
-    }
+    //     for num in &nums {
+    //         tree.insert(*num);
+    //     }
+    //     assert_eq!(tree.delete(&55), Some(55));
+    //     println!("{:#?}", tree);
+    // }
 }

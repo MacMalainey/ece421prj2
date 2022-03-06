@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 use std::fmt::Display;
 use std::fmt::Debug;
 use std::cell::RefCell;
@@ -249,8 +249,10 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
 }
 
 
-/// Shorthand type for pointer a pointer to a shared [TreeNode]
+/// Shorthand type for pointer to a shared [TreeNode]
 pub type TreeBranch<T, U> = Rc<RefCell<TreeNode<T, U>>>;
+/// Shorthand type for pointer to a parent [TreeNode]
+pub type TreeTrunk<T, U> = Weak<RefCell<TreeNode<T, U>>>;
 
 /// Balance trait for a [Tree]
 /// 
@@ -303,7 +305,7 @@ pub struct TreeNode<T: Ord, U>
     /// Number of leaves of the tree that is rooted by this node
     leaves: usize,
     /// Reference to parent node
-    parent: Tree<T, U>,
+    parent: TreeTrunk<T, U>,
     /// Reference to left child node
     left: Tree<T, U>,
     /// Reference to right child node
@@ -322,7 +324,7 @@ impl <T: Ord, U: TreeBalance> TreeNode<T, U> {
             key,
             height: 1,
             leaves: 1,
-            parent: Tree::new(),
+            parent: Weak::new(),
             left: Tree::new(),
             right: Tree::new(),
             balance: U::new_root()
@@ -333,7 +335,7 @@ impl <T: Ord, U: TreeBalance> TreeNode<T, U> {
     /// 
     /// Creates [TreeNode] that owns the given key and references the given parent
     /// and initializes the associated [TreeBalance] as a non-root node (even if parent reference is None)
-    pub fn new_with_parent(key: T, parent: Tree<T, U>) -> Self {
+    pub fn new_with_parent(key: T, parent: TreeTrunk<T, U>) -> Self {
         TreeNode {
             key,
             height: 1,
@@ -390,8 +392,8 @@ impl <T: Ord, U: TreeBalance> TreeNode<T, U> {
     }
 
     /// Returns a reference to this node's parent [TreeBranch]
-    pub fn get_parent(&self) -> Option<&TreeBranch<T, U>> {
-        self.parent.0.as_ref()
+    pub fn get_parent(&self) -> Option<TreeBranch<T, U>> {
+        Weak::upgrade(&self.parent)
     }
 
     /// Returns a mutable reference to the [Tree]
@@ -405,7 +407,7 @@ impl <T: Ord, U: TreeBalance> TreeNode<T, U> {
 
     /// Returns a mutable reference to the [Tree]
     /// used to point to the parent of this node
-    pub fn get_parent_joint(&mut self) -> &mut Tree<T, U> {
+    pub fn get_parent_joint(&mut self) -> &mut TreeTrunk<T, U> {
         &mut self.parent
     }
 
@@ -419,7 +421,7 @@ impl <T: Ord, U: TreeBalance> TreeNode<T, U> {
 
         // Remove parent reference from the path we just detached
         if let Some(ref p) = pruned.0 {
-            *p.borrow_mut().get_parent_joint() = Tree::new()
+            *p.borrow_mut().get_parent_joint() = Weak::new()
         }
 
         pruned

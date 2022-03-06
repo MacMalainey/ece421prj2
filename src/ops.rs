@@ -35,12 +35,15 @@ pub fn bst_insert<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: T) -> Tree<T, U
             *pnode.get_joint(xpath) = Tree::new_with(
                 Rc::new(
                     RefCell::new(
-                        TreeNode::new_with_parent(key, Tree::new_with(Rc::clone(&p)))
+                        TreeNode::new_with_parent(key, Rc::downgrade(&p))
                     )
                 )
             );
             pnode.update();
-            pnode.get_parent().map(|b| (Rc::clone(b), b.borrow().find_placement(&pnode)))
+            pnode.get_parent().map(|b| {
+                let placement = b.borrow().find_placement(&pnode);
+                (b, placement)
+            })
         };
 
         // Rebalance Tree
@@ -53,9 +56,11 @@ pub fn bst_insert<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: T) -> Tree<T, U
                     rnode.update();
                     match next_pos {
                         TreePosition::Root => break,
-                        TreePosition::Parent => {
-                            rnode.get_parent().map(|b| (Rc::clone(b), b.borrow().find_placement(&rnode)))
-                        },
+                        TreePosition::Parent =>
+                            rnode.get_parent().map(|b| {
+                                let placement = b.borrow().find_placement(&rnode);
+                                (b, placement)
+                        }),
                         TreePosition::Child(_) => panic!("Should not happen!")
                     }
                 };
@@ -70,12 +75,12 @@ pub fn bst_insert<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: T) -> Tree<T, U
             }
 
             // If we have anything more to go up the tree, do now
-            let mut next = { r.borrow().get_parent().map(|b| Rc::clone(b)) };
+            let mut next = { r.borrow().get_parent() };
             while let Some(n) = next {
                 r = n;
                 let mut rnode = r.borrow_mut();
                 rnode.update();
-                next = rnode.get_parent().map(|b| Rc::clone(b));
+                next = rnode.get_parent();
             }
 
             Tree::new_with(r)
@@ -97,18 +102,18 @@ pub fn bst_insert<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: T) -> Tree<T, U
 // Helper enum, only used for bst_delete
 enum DeletePosition<T: Ord, U: TreeBalance> {
     Child(TreeBranch<T, U>, TreePath),
-    Root(Tree<T, U>)
+    Root
 }
 
 pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T, U>, Option<T>) {
     if let Some(mut p) = root.into_inner() {
         // Find the parent node of the node we wish to delete
         // Or if the tree is empty we just return root
+        let mut root_keep_alive = Tree::new_with(Rc::clone(&p));
         let mut xpath = {
             p.borrow().search(key)
         };
         if let Some(mut path) = xpath {
-            let root = Rc::clone(&p);
             loop {
                 let next = {
                     let pnode = p.borrow();
@@ -126,7 +131,7 @@ pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T,
                         path = next_path;
                         p = x;
                     }
-                    None => return (Tree::new_with(root), None)
+                    None => return (root_keep_alive, None)
                 }
             }
         }
@@ -140,8 +145,9 @@ pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T,
                 (popped, DeletePosition::Child(p, path))
             } else {
                 // If there is not xpath that means the node we wish to pop is root
-                let mut root = Tree::new_with(p);
-                (bst_pop(&mut root), DeletePosition::Root(root))
+                drop(root_keep_alive); // Drop here to remove extra Rc pointer that is needed so that the Weak references don't die
+                root_keep_alive = Tree::new_with(p);
+                (bst_pop(&mut root_keep_alive), DeletePosition::Root)
             };
 
             // If the pop was successful, return the result...
@@ -149,13 +155,15 @@ pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T,
             if let Some((key, balance)) = popped {
                 match position {
                     DeletePosition::Child(p, path) => (key, balance, p, path),
-                    DeletePosition::Root(root) => return (root, Some(key))
+                    DeletePosition::Root => return (root_keep_alive, Some(key))
                 }
             } else {
                 // Store the node we will swap with (original x)
                 let to_swap = match position {
                     DeletePosition::Child(p, path) => Rc::clone(p.borrow().get_child(path).unwrap()),
-                    DeletePosition::Root(root) => root.into_inner().unwrap()
+                    DeletePosition::Root => {
+                        Rc::clone(root_keep_alive.branch().unwrap())
+                    }
                 };
 
                 let mut xpath = Right;
@@ -170,7 +178,7 @@ pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T,
                         xnode.get_child(Left).is_none()
                     };
 
-                    // If yes, pop the node. Otherwise continue travelling the tree
+                    // If yes, pop the b.borrow().find_placement(&pnode)node. Otherwise continue travelling the tree
                     if pop {
                         let (popped_key, popped_balance) = {
                             let mut pnode = p.borrow_mut();
@@ -204,7 +212,10 @@ pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T,
                 match next_pos {
                     TreePosition::Root => break,
                     TreePosition::Parent => {
-                        pnode.get_parent().map(|b| (Rc::clone(b), b.borrow().find_placement(&pnode)))
+                        pnode.get_parent().map(|b| {
+                            let placement = b.borrow().find_placement(&pnode);
+                            (b, placement)
+                        })
                     },
                     TreePosition::Child(path) => {
                         let new = Rc::clone(pnode.get_child(path).unwrap());
@@ -222,12 +233,12 @@ pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T,
         }
 
         // If we have anything more to go up the tree, do now
-        let mut next = { p.borrow().get_parent().map(|b| Rc::clone(b)) };
+        let mut next = { p.borrow().get_parent() };
         while let Some(n) = next {
             p = n;
             let mut rnode = p.borrow_mut();
             rnode.update();
-            next = rnode.get_parent().map(|b| Rc::clone(b));
+            next = rnode.get_parent();
         }
 
         (Tree::new_with(p), Some(key))
@@ -251,8 +262,8 @@ pub fn bst_pop<T: Ord, U: TreeBalance>(tree: &mut Tree<T, U>) -> Option<(T, U)> 
             // Change the successor's parent
             if let Some(s) = suc.branch() {
                 let parent = x.get_parent().map_or(
-                    Tree::new(),
-                    |b| Tree::new_with(Rc::clone(b))
+                    std::rc::Weak::new(),
+                    |b| Rc::downgrade(&b)
                 );
                 *s.borrow_mut().get_parent_joint() = parent;
             }
@@ -270,7 +281,7 @@ pub fn bst_pop<T: Ord, U: TreeBalance>(tree: &mut Tree<T, U>) -> Option<(T, U)> 
 pub fn bst_rotate<T: Ord, U: TreeBalance>(p: TreeBranch<T, U>, direction: TreePath) -> TreeBranch<T, U> {
     // Get the grandparent
     let grandparent = {
-        p.borrow().get_parent().map(|branch| Rc::clone(branch))
+        p.borrow().get_parent()
     };
 
     // Break apart the tree
@@ -284,7 +295,7 @@ pub fn bst_rotate<T: Ord, U: TreeBalance>(p: TreeBranch<T, U>, direction: TreePa
     // Connect the grandchild and old parent together
     {
         if let Some(v) = grandchild.branch() {
-            *v.borrow_mut().get_parent_joint() = Tree::new_with(Rc::clone(&p));
+            *v.borrow_mut().get_parent_joint() = Rc::downgrade(&p);
         }
         let mut pnode = p.borrow_mut();
         *pnode.get_joint(direction) = grandchild;
@@ -293,7 +304,7 @@ pub fn bst_rotate<T: Ord, U: TreeBalance>(p: TreeBranch<T, U>, direction: TreePa
 
     // Connect the old child and old parent together
     { *x.borrow_mut().get_joint(direction.reflect()) = Tree::new_with(Rc::clone(&p)); }
-    { *p.borrow_mut().get_parent_joint() = Tree::new_with(Rc::clone(&x)); }
+    { *p.borrow_mut().get_parent_joint() = Rc::downgrade(&x); }
 
     // Connect the old child and grandparent together
     if let Some(r) = grandparent {
@@ -301,7 +312,7 @@ pub fn bst_rotate<T: Ord, U: TreeBalance>(p: TreeBranch<T, U>, direction: TreePa
             r.borrow().find_placement(&x.borrow())
         };
         { *r.borrow_mut().get_joint(direction) = Tree::new_with(Rc::clone(&x)) };
-        { *x.borrow_mut().get_parent_joint() = Tree::new_with(r) };
+        { *x.borrow_mut().get_parent_joint() = Rc::downgrade(&r) };
     }
 
     x
