@@ -4,6 +4,8 @@ use crate::inspect::*;
 
 pub struct AVLBalance();
 
+/// Implementation of a balance for a binary tree
+/// that effectively converts a [Tree] into into an AVLTree
 impl TreeBalance for AVLBalance {
 
     fn rebalance_insert<T: Ord>(node: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> TreePosition<T, Self> {
@@ -31,6 +33,7 @@ impl TreeBalance for AVLBalance {
     }
 
     fn rebalance_delete<T: Ord>(node: NodeInspector<T, Self>, upath: TreePath, _: &Self) -> TreePosition<T, Self> {
+        // Check if we need to rebalance
         let ppath = upath.reflect();
         let rebalance = {
             let pheight = node.inspect_child(ppath).map_or(0, |b| b.inspect_height());
@@ -40,7 +43,7 @@ impl TreeBalance for AVLBalance {
         };
 
         if rebalance {
-            // Get child path
+            // Get child path that we need for the rebalance
             let xpath = {
                 let pnode = node.inspect_child(ppath).unwrap();
                 let inline_height = pnode.inspect_child(ppath).map_or(0, |x| x.inspect_height());
