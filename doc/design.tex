@@ -1,0 +1,158 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage[utf8]{inputenc}
+
+\title{Balanced Binary Tree Crate Report}
+\author{
+    Mackenzie Malainey
+    \texttt{mmalaine@ualberta.ca}
+    \and
+    Lora Ma
+    \texttt{lora@ualberta.ca}
+    \and
+    Benjamin Kong
+    \texttt{bkong@ualberta.ca}
+}
+
+% Update date each push
+\date{January 2, 2021}
+
+\begin{document}
+\maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Major Innovations}
+
+\subsection{Custom TreeBalance Implementations}
+As a result of working towards our goal of implementing a Red Black Tree and AVL Tree with shared components,
+we designed a system that allows library users to implement their own algorithm to perform adjustments
+to the tree structure after insertion or deletion.  This system allows users to implement the TreeBalance
+trait within their own code and use that for performing balances on the tree after the structure changes.
+While the library does already expose the common Red Black Tree and AVL Tree types, because of how they were implemented
+we were able to expose this method to create a "custom balance" so that users may implement ones that better suit their needs.
+
+For example:
+Instead of a balanced tree, it might be better for the user to have a binary search tree that is skewed to the right.
+A case for this could be when working a very large tree that will rarely search for elements that would be on the far right,
+but is mostly going to be used to search for elements on the far left.  Providing a custom balancing algorithm to skew the tree
+such that the far left is closer to the middle could provide a performance boost in the long term.  The exposure of the
+TreeBalance trait allows library users to do just that, without having to be concerned about implementing the entire tree.
+Furthermore, they still have access to the AVL Tree and Red Black Tree types if those end up being required as well.
+
+Additionally, from the TreeBalance trait we implemented a non-balancing tree (plain binary search tree) and exposed that type as well.
+
+\newpage
+\section{Design}
+
+\subsection{Rationale}
+
+This crate was designed based on the requirement of the implementation of both a Red Black Tree and an AVL Tree
+for generalized types.  In essence a Red Black Tree and an AVL Tree are both Binary Search Trees but with balancing checks
+and operations that are executed whenever the structure of the tree changes (an insertion or deletion occurs).
+From this the idea of a balanced tree can be broke into two components: a Binary Search Tree and a balancing algorithm.
+
+Further investigation into the nature of the AVL and Red Black algorithms displayed that the two balancing algorithms both perform very similar operations:
+\begin{itemize}
+    \item Inspect a subtree that was affected by the operation
+    \item Perform a rotation on the first/second levels of the subtree
+\end{itemize}
+
+Firstly, this revealed that neither algorithm was proactive in tree operations but instead are reactive
+(has no say in how the actual is operation performed, instead uses the changes in the tree structure to rebalance after the fact).
+From that, it became clear that performing operations on the tree and the act of rebalancing do not influence each other except through
+their changes to the tree.  Therefore tree operations can be opaque to the balancing algorithms (aside from performing rotations).
+
+Secondly we find that as long as the balancing algorithms are provided a way to inspect the structure of the tree they do not require
+access to any of the actual structure of it, aside from a method to perform rotations on the tree.  This became the motivation for
+the [inspect] components that hide away the tree's internal code structure so that the balancing algorithm is not able to break
+the contract of a binary search tree.  If the internal workings of the tree are safely abstracted away then any balancing algorithm can
+be implemented with the guarantee that the tree will remain a binary search tree after rebalancing.  This allowed us to not only safely implement
+the AVL Tree and Red Black Tree algorithms with those guarantees, but expose the [TreeBalance] trait to the public for custom implementation.
+And any operations that could break the tree's structure are guarded using panics (not recoverable errors as contract breaking changes are always preventable)
+
+However, there was one decision still to be identified: how would we associate a balancing function with a given tree.
+An AVL Tree only requires information on a subtree's structure that is already defined (its' height) and which subtree to start looking at.
+Opposite to this, a Red Black Tree requires metadata to be associated with each node that the algorithm must have read/write access to.
+From this we realized that a balancing algorithm should be allowed access to a mutable metadata stored at each node if it requires it.
+
+To summarize our decision was to create a binary search tree whose programatical structure and how it performed operations were opaque
+to any balancing algorithm, but would use an associated balancing algorithm (defined at compile-time and whose implementation is mostly opaque to the tree)
+after a successful tree operation to perform rebalancing on the tree (with optional mutable access to metadata only used and adjusted by the balancer).
+We also required error handling on public [Tree] methods since cases where a delete or insertion fail can occur acceptably.
+
+\subsection{Analysis}
+\subsubsection{Crate Structure}
+There are four main things this crate exposes:
+\begin{description}
+    \item[Tree] The public interface for a binary search tree
+    \item[AVLTree] implementation of an AVLTree on a [Tree] using the [TreeBalance] trait
+    \item[RedBlackTree] implementation of an RedBlackTree on a [Tree] using the [TreeBalance] trait
+    \item[TreeBalance] trait definition for implementing a type a [Tree] will use to perform balancing operations
+\end{description}
+\hfill \break
+\noindent The crate is organized into the following modules:
+\begin{description}
+    \item[lib] Top level library that exposes necessary components outside the crate
+    \item[main] CLI Demo code
+    \item[avl] The AVL Tree implementation of the [TreeBalance] trait
+    \item[redblack] The Red Black Tree implementation of the [TreeBalance] trait
+    \item[tree] [Tree] definition and implementation, submodules are further implementation dependencies
+    \item[tree::inspect] Holds trait definitions, structs, and enums required and related to the [TreeBalance] trait
+    \item[tree::ops] Holds functions to perform operations on a tree
+    \item[tree::node] Holds struct definition for a node in the tree
+\end{description}
+
+\subsubsection{[Tree] Structure}
+A [Tree] acts as both the public facing interface for working with a binary search tree as well as
+acting as a way a container for pointers to a node's child objects as it will possibly contain
+a pointer to a [TreeNode].  A [TreeNode] is an actual node in a tree stored on the heap that contains the
+key, parent and children pointers, and metadata regarding the tree's structure.  Any type that implements the [TreeBalance] trait
+can be used associated with a [Tree] type so it is used to perform balancing after operations.
+As a method to safeguard a [Tree]'s internal structure when a rebalance is requested a [NodeInspector] is passed into the
+the relevant [TreeBalance] trait function as a handle that can be used to inspect the tree's structure and perform rotations as necessary.
+A [Tree] must have an associated [TreeBalance] trait with it (types are associated at compiled time through generics).
+
+\subsection{Extension}
+As mentioned already the code is fairly extensible by custom implementing the [TreeBalance] trait and using the associated
+[NodeInspector] and related types.  However, in regards to adjustments required to implement a more complex type of tree such, as a 2-3-4 Tree or a B-Tree,
+we would need to significantly change the design of the [Tree] structure.  First of we would need to generalize how child nodes are indexed, therefore allowing
+more than two children per node (and it becoming opaque to the operation functions, to be implemented outside of the structure).
+Secondly, nodes will need to be multi-keyed meaning we will need to adjust how we handle the [TreeNode] to allow for multiple keys.
+Lastly, the [Tree] structure invokes the balancing algorithm in as a reaction to structure change, a B-Tree and 2-3-4 Tree are balanced
+proactively (before the insertion is made).  This would require providing the balancing algorithm access during search now on top of when travelling back up the tree
+(if we want to continue to provide support for the AVLTree case).  Furthermore we would also need to expose a splitting operation for multi-key nodes.
+Overall, for complex multikey and multi-path nodes this is not easily extensible, a large rewrite of the library would be required.
+Although this could be made easier by instead of generalizing the node type to handle all cases, we generalize the input and delete operations to handle
+multiple different node types (binary tree node, multi-key node, etc) and have multiple node types that handle invoking the 
+
+\section{Known Issues}
+
+\subsection{Red Black Tree}
+
+\subsection{TreeBalance Trait Implementation}
+
+\section{Benchmarking}
+
+\subsection{Red Black Tree}
+
+\subsection{AVL Tree}
+
+\subsection{Comparison}
+
+\subsection{Conclusion}
+
+\subsection{Further Testing}
+
+\section{User Manual}
+
+\subsection{Tree}
+
+\subsection{Pre-Defined Types}
+
+\subsection{TreeBalance Trait Implementation}
+
+\subsection{CLI Demo}
+
+\end{document}

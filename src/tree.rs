@@ -251,9 +251,9 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
 
 
 /// Shorthand type for pointer to a shared [TreeNode]
-pub type TreeBranch<T, U> = Rc<RefCell<TreeNode<T, U>>>;
+type TreeBranch<T, U> = Rc<RefCell<TreeNode<T, U>>>;
 /// Shorthand type for pointer to a parent [TreeNode]
-pub type TreeTrunk<T, U> = Weak<RefCell<TreeNode<T, U>>>;
+type TreeTrunk<T, U> = Weak<RefCell<TreeNode<T, U>>>;
 
 /// Balance trait for a [Tree]
 /// 

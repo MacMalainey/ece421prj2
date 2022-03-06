@@ -43,16 +43,16 @@
     [] - Mention addition benchmarks (do not include in report)
 
 [] - Design doc
-    [] - Major Innovations
-        [] - Ability to implement own balancing types with SAFE API for it
-        [] - Same base code used for unbalanced tree (which type is provided)
-    [] - Design Rationalle
-        [] - Design questions
-            [] - What does a Red-Black tree provide that cannot be accomplished with ordinary binary search trees?
-            [] - Do you need to apply any kind of error handling in your system (panic macro, Option<T>, Result<T, E>, etc)
-            [] - What components do the Red-Black tree and AVL tree have in common?
-            [] - How do we construct our design to "allow it to be efficiently and effectively extended"? (examples: 2-3-4 tree, B-tree)
-        [] - Rationalle
+    [x] - Major Innovations
+        [x] - Ability to implement own balancing types with SAFE API for it
+        [x] - Same base code used for unbalanced tree (which type is provided)
+    [x] - Design Rationalle
+        [x] - Design questions
+            [x] - What does a Red-Black tree provide that cannot be accomplished with ordinary binary search trees?
+            [x] - Do you need to apply any kind of error handling in your system (panic macro, Option<T>, Result<T, E>, etc)
+            [x] - What components do the Red-Black tree and AVL tree have in common?
+            [x] - How do we construct our design to "allow it to be efficiently and effectively extended"? (examples: 2-3-4 tree, B-tree)
+        [x] - Rationalle
     [] - Known errors, faults, defects, missing functionality
         [] - Check for Red-Black Tree errors
             [] - Document if any
