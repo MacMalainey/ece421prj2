@@ -1,0 +1,71 @@
+[] - Refactor for privatization
+
+[] - Write tests
+    [] - Red Black Tree
+        [] - Insert Cases
+            [] - (R, R)
+            [] - (R, B)
+            [] - (B, _)
+        [] - Delete Cases
+            [] - (R, _)
+            [] - (B, R)
+            [] - (B, B(R))
+            [] - (B, B(B))
+    [] - AVL Tree
+        [] - Insert Case
+            [] - Balanced
+            [] - Unbalanced
+        [] - Delete Case
+            [] - Balanced
+            [] - Unbalanced
+
+[] - Write unbalanced tree
+
+[] - CLI
+    [] - Allow choosing of the type tree (and switching between them)
+    [] - Allow deleting from the tree
+    [] - Allow inserting into the tree
+    [] - Allow clearing the tree
+    [] - Allow pretty printing (use Debug trait with pretty print flag) of the tree
+    [] - Allow inorder printing (use Display trait) of the tree
+    [] - Allow checking if the tree is empty
+    [] - Allow checking the height of the tree
+    [] - Allow checking the number of leaves on the tree
+
+[] - Benchmarks
+    [] - Comment on results
+        [] - Which tree is better performance wise?
+        [] - Are other cases needed?
+        [] - Are additional structures required (such as baseline of unbalanced tree)?
+    [] - Embed benchmark results in design doc
+    [] - Additional benchmarks for deletion cases
+    [] - Additional benchmarks for unbalanced cases
+    [] - Mention addition benchmarks (do not include in report)
+
+[] - Design doc
+    [] - Major Innovations
+        [] - Ability to implement own balancing types with SAFE API for it
+        [] - Same base code used for unbalanced tree (which type is provided)
+    [] - Design Rationalle
+        [] - Design questions
+            [] - What does a Red-Black tree provide that cannot be accomplished with ordinary binary search trees?
+            [] - Do you need to apply any kind of error handling in your system (panic macro, Option<T>, Result<T, E>, etc)
+            [] - What components do the Red-Black tree and AVL tree have in common?
+            [] - How do we construct our design to "allow it to be efficiently and effectively extended"? (examples: 2-3-4 tree, B-tree)
+        [] - Rationalle
+    [] - Known errors, faults, defects, missing functionality
+        [] - Check for Red-Black Tree errors
+            [] - Document if any
+        [] - Optimize Red-Black Tree Insert case
+            [] - Document if not optimized
+            [] - Reference in benchmarks section
+        [] - Missing functionality for DIY balance API
+            [] - Only move once relative to node (Lacking Robustness)
+            [] - Only function operations on Balance objects (Lacking Cleanliness)
+            [] - Lacking error handling for if root has parent at start of bst_insert and bst_delete (Not user facing, however will prevent internal crate bugs)
+    [] - User Manual
+        [] - Using a Tree
+        [] - Using pre-made balances
+        [] - Using DIY balance API
+        [] - Using CLI
+    [] - 2 Minute video for marketting
