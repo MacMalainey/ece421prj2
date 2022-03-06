@@ -32,15 +32,15 @@
     [] - Allow checking the height of the tree
     [] - Allow checking the number of leaves on the tree
 
-[] - Benchmarks
-    [] - Comment on results
-        [] - Which tree is better performance wise?
-        [] - Are other cases needed?
-        [] - Are additional structures required (such as baseline of unbalanced tree)?
+[x] - Benchmarks
+    [x] - Comment on results
+        [x] - Which tree is better performance wise?
+        [x] - Are other cases needed?
+        [x] - Are additional structures required (such as baseline of unbalanced tree)?
     [] - Embed benchmark results in design doc
-    [] - Additional benchmarks for deletion cases
-    [] - Additional benchmarks for unbalanced cases
-    [] - Mention addition benchmarks (do not include in report)
+    [x] - Additional benchmarks for deletion cases
+    [x] - Additional benchmarks for unbalanced cases
+    [x] - Mention addition benchmarks (do not include in report)
 
 [] - Design doc
     [x] - Major Innovations

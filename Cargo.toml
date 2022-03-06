@@ -10,7 +10,6 @@ edition = "2018"
 
 [dev-dependencies]
 criterion = "0.3"
-rand = "0.8.4"
 
 [[bench]]
 name = "insert_search_benchmark"

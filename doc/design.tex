@@ -150,10 +150,17 @@ checking the surrounding node's colors before deciding it is that special case a
 \subsection{AVL Tree}
 
 \subsection{Comparison}
+For every case the AVL Tree performs noticeably better than the Red Black Tree illustrating that the AVL Tree is more efficient.
+However, this conclusion really can only be said for this worst possible "insert and search" case.  This does not provide insight on best case behaviour or on random behaviour.
+Furthermore we have no benchmarks for any deletion case.  These additional benchmarks would be valuable data for getting a more complete picture on how
+the two data structures differ performance wise.  As well, if we have any knowledge of the data we expect to recieve we can use the additional bookmarks to select the best data structure for the
+case we are most likely to match.
 
-\subsection{Conclusion}
+Using a binary search tree as a baseline measurement is not likely to be necessary.  We know that the worst case complexity of the AVL Tree and Red Black Tree are better than
+that of a binary search tree and the comparison is between the two trees.  However if we include more benchmarks for other cases having a baseline might be more beneficial
+so we may get a better picture of how more general cases actually compare.  It might also be beneficial to include benchmarks for 2-3-4 Trees and B-Trees.  Again, this way we can get
+more information regarding what sort of tree would be the best fit for our use case (provided we know anything in advance about how the tree will get used most commonly).
 
-\subsection{Further Testing}
 
 \section{User Manual}
 

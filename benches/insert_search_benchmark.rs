@@ -1,14 +1,11 @@
+use std::convert::TryFrom;
 use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 use project2::{RedBlackTree, AVLTree};
-use rand::Rng;
 
-fn generate_values(limit: usize) -> Vec<u32> {
-    let mut values = Vec::with_capacity(limit);
-    let mut rng = rand::thread_rng();
-    let mut next = 0;
+fn generate_values(limit: u32) -> Vec<u32> {
+    let mut values = Vec::with_capacity(usize::try_from(limit).unwrap());
     for i in 0..limit {
-        values.insert(i, next);
-        next += rng.gen_range(1..=4);
+        values.insert(usize::try_from(i).unwrap(), i);
     }
     values
 }
