@@ -13,7 +13,7 @@ enum RBColor {
 pub struct RedBlackBalance(RBColor);
 
 impl TreeBalance for RedBlackBalance {
-    fn rebalance_insert<T: Ord>(mut node: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> NextTreePosition<T, Self> {
+    fn rebalance_insert<T: Ord>(mut node: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> TreePosition<T, Self> {
 
         let (pcolor, ucolor) = {
             (
@@ -43,7 +43,7 @@ impl TreeBalance for RedBlackBalance {
             (Black, _) => ()
         }
 
-        node.into_next_position(TreePosition::Parent)
+        node.into_position(NodeOffset::Parent)
 
     }
 
@@ -55,9 +55,9 @@ impl TreeBalance for RedBlackBalance {
         RedBlackBalance (Black)
     }
 
-    fn rebalance_delete<T: Ord>(mut node: NodeInspector<T, Self>, xpath: TreePath, popped_balance: &Self) -> NextTreePosition<T, Self> {
+    fn rebalance_delete<T: Ord>(mut node: NodeInspector<T, Self>, xpath: TreePath, popped_balance: &Self) -> TreePosition<T, Self> {
         if popped_balance.0 == Red {
-            return node.into_next_position(TreePosition::Root);
+            return node.into_position(NodeOffset::Root);
         }
         let spath = xpath.reflect();
         let (xcolor, scolor, vpath) = {
@@ -89,14 +89,14 @@ impl TreeBalance for RedBlackBalance {
                     node.inspect_child(TreePath::Right).unwrap().update_balance(|b| b.0 = Black);
                     node.inspect_child(TreePath::Left).unwrap().update_balance(|b| b.0 = Black);
                     node.update_balance(|b| b.0 = pcolor);
-                    node.into_next_position(TreePosition::Root)
+                    node.into_position(NodeOffset::Root)
                 } else {
                     node.inspect_child(spath).map(|mut n| n.update_balance(|b| b.0 = Red));
                     match pcolor {
-                        Black => node.into_next_position(TreePosition::Parent),
+                        Black => node.into_position(NodeOffset::Parent),
                         Red => {
                             node.update_balance(|b| b.0 = Red);
-                            node.into_next_position(TreePosition::Root)
+                            node.into_position(NodeOffset::Root)
                         }
                     }
                 }
@@ -104,10 +104,10 @@ impl TreeBalance for RedBlackBalance {
                 node = node.rotate((spath, spath));
                 { node.inspect_child(xpath).unwrap().update_balance(|b| b.0 = Red);}
                 { node.update_balance(|b| b.0 = Black); }
-                node.into_next_position(TreePosition::Child(xpath))
+                node.into_position(NodeOffset::Child(xpath))
             }
         } else {
-            node.into_next_position(TreePosition::Root)
+            node.into_position(NodeOffset::Root)
         }
         
     }

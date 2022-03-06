@@ -6,7 +6,7 @@ pub struct AVLBalance();
 
 impl TreeBalance for AVLBalance {
 
-    fn rebalance_insert<T: Ord>(node: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> NextTreePosition<T, Self> {
+    fn rebalance_insert<T: Ord>(node: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> TreePosition<T, Self> {
         let rebalance = {
             let pheight = node.inspect_child(path.0).unwrap().inspect_height();
             let uheight = node.inspect_child(path.0.reflect()).map_or(0, |b| b.inspect_height());
@@ -15,9 +15,9 @@ impl TreeBalance for AVLBalance {
         };
 
         if rebalance {
-            node.rotate(path).into_next_position(TreePosition::Root)
+            node.rotate(path).into_position(NodeOffset::Root)
         } else {
-            node.into_next_position(TreePosition::Parent)
+            node.into_position(NodeOffset::Parent)
         }
 
     }
@@ -30,7 +30,7 @@ impl TreeBalance for AVLBalance {
         AVLBalance()
     }
 
-    fn rebalance_delete<T: Ord>(node: NodeInspector<T, Self>, upath: TreePath, _: &Self) -> NextTreePosition<T, Self> {
+    fn rebalance_delete<T: Ord>(node: NodeInspector<T, Self>, upath: TreePath, _: &Self) -> TreePosition<T, Self> {
         let ppath = upath.reflect();
         let rebalance = {
             let pheight = node.inspect_child(ppath).map_or(0, |b| b.inspect_height());
@@ -53,9 +53,9 @@ impl TreeBalance for AVLBalance {
                     ppath.reflect()
                 }
             };
-            node.rotate((ppath, xpath)).into_next_position(TreePosition::Parent)
+            node.rotate((ppath, xpath)).into_position(NodeOffset::Parent)
         } else {
-            node.into_next_position(TreePosition::Parent)
+            node.into_position(NodeOffset::Parent)
         }
     }
 }

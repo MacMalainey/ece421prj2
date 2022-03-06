@@ -55,13 +55,13 @@ pub fn bst_insert<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: T) -> Tree<T, U
                     let mut rnode = r.borrow_mut();
                     rnode.update();
                     match next_pos {
-                        TreePosition::Root => break,
-                        TreePosition::Parent =>
+                        NodeOffset::Root => break,
+                        NodeOffset::Parent =>
                             rnode.get_parent().map(|b| {
                                 let placement = b.borrow().find_placement(&rnode);
                                 (b, placement)
                         }),
-                        TreePosition::Child(_) => panic!("Should not happen!")
+                        NodeOffset::Child(_) => panic!("Should not happen!")
                     }
                 };
 
@@ -210,14 +210,14 @@ pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T,
                 let mut pnode = p.borrow_mut();
                 pnode.update();
                 match next_pos {
-                    TreePosition::Root => break,
-                    TreePosition::Parent => {
+                    NodeOffset::Root => break,
+                    NodeOffset::Parent => {
                         pnode.get_parent().map(|b| {
                             let placement = b.borrow().find_placement(&pnode);
                             (b, placement)
                         })
                     },
-                    TreePosition::Child(path) => {
+                    NodeOffset::Child(path) => {
                         let new = Rc::clone(pnode.get_child(path).unwrap());
                         Some((new, path))
                     }

@@ -276,7 +276,7 @@ pub trait TreeBalance
     /// The path of the operation is provided in format (Parent Insertion Path, Child Insertion Path)
     /// 
     /// Returns the next position to rebalance in relation to the node currently being balanced
-    fn rebalance_insert<T: Ord>(inspector: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> NextTreePosition<T, Self>;
+    fn rebalance_insert<T: Ord>(inspector: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> TreePosition<T, Self>;
 
     /// Perform a rebalance after a delete operation
     /// 
@@ -288,7 +288,7 @@ pub trait TreeBalance
     /// The balance from the deleted node is also provided.
     /// 
     /// Returns the next position to rebalance in relation to the node currently being balanced
-    fn rebalance_delete<T: Ord>(inspector: NodeInspector<T, Self>, path: TreePath, balance: &Self) -> NextTreePosition<T, Self>;
+    fn rebalance_delete<T: Ord>(inspector: NodeInspector<T, Self>, path: TreePath, balance: &Self) -> TreePosition<T, Self>;
 }
 
 /// A node in a binary tree structure
