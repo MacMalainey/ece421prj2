@@ -1,8 +1,9 @@
-use crate::tree::*;
-use crate::tree::TreePath::*;
-use crate::inspect::*;
 use std::rc::Rc;
 use std::cell::RefCell;
+
+use super::*;
+use super::TreePath::*;
+use super::inspect::*;
 
 /// Perform an insertion using a given key
 /// on a binary tree with the given root
@@ -66,7 +67,7 @@ pub fn bst_insert<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: T) -> Tree<T, U
         if let Some((mut r, mut ppath)) = grandparent {
             loop {
                 // Perform the rebalance
-                let (current, next_pos) = U::rebalance_insert(NodeInspector::from(r), (ppath, xpath)).into_inner();
+                let (current, next_pos) = U::rebalance_insert(NodeInspector::open(r), (ppath, xpath)).into_inner();
                 r = current;
                 // Get the next node based off next_pos
                 let next = {
@@ -248,7 +249,7 @@ pub fn bst_delete<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: &T) -> (Tree<T,
 
         // Rebalance Tree
         loop {
-            let (current, next_pos) = U::rebalance_delete(NodeInspector::from(p), xpath, &mut balance).into_inner();
+            let (current, next_pos) = U::rebalance_delete(NodeInspector::open(p), xpath, &mut balance).into_inner();
     
             // Based on the instructions from the balancer we either rebalance a child, parent, or stop and just go to root
             let next = {

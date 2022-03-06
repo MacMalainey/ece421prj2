@@ -1,14 +1,15 @@
 use std::fmt::Debug;
-use crate::tree::*;
-use crate::inspect::*;
 
-pub struct AVLBalance();
+use crate::tree::{TreeBalance, TreePath};
+use crate::tree::inspect::*;
 
 /// Implementation of a balance for a binary tree
 /// that effectively converts a [Tree] into into an AVLTree
+pub struct AVLBalance();
 impl TreeBalance for AVLBalance {
 
     fn rebalance_insert<T: Ord>(node: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> TreePosition<T, Self> {
+        // Check if we need to rebalance
         let rebalance = {
             let pheight = node.inspect_child(path.0).unwrap().inspect_height();
             let uheight = node.inspect_child(path.0.reflect()).map_or(0, |b| b.inspect_height());

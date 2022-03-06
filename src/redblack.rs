@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
-use crate::tree::*;
-use crate::inspect::*;
+use crate::tree::{TreeBalance, TreePath};
+use crate::tree::inspect::*;
 
 use RBColor::*;
 /// Node colors
@@ -11,10 +11,9 @@ enum RBColor {
     Black
 }
 
-pub struct RedBlackBalance(RBColor);
-
 /// Implementation of a balance for a binary tree
 /// that effectively converts a [Tree] into into an Red Black Tree
+pub struct RedBlackBalance(RBColor);
 impl TreeBalance for RedBlackBalance {
     fn rebalance_insert<T: Ord>(mut node: NodeInspector<T, Self>, path: (TreePath, TreePath)) -> TreePosition<T, Self> {
 

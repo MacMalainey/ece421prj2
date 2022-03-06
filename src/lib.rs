@@ -1,7 +1,5 @@
 pub mod avl;
 pub mod tree;
-pub mod ops;
-pub mod inspect;
 pub mod redblack;
 
 use tree::Tree;

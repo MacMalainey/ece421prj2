@@ -1,5 +1,5 @@
-use crate::tree::*;
-use crate::ops::bst_rotate;
+use super::*;
+use super::ops::bst_rotate;
 
 /// Inspector for checking and manipulating a tree's state
 /// 
@@ -28,12 +28,13 @@ pub enum NodeOffset {
 pub struct TreePosition<T: Ord, U: TreeBalance>(TreeBranch<T, U>, NodeOffset);
 
 /// Consumes and returns the data that the TreePosition wrapped
-impl <T: Ord, U: TreeBalance> TreePosition<T, U> {
-    pub fn into_inner(self) -> (TreeBranch<T, U>, NodeOffset) {
+impl <T: Ord, U: TreeBalance> IntoInner for TreePosition<T, U> {
+    type Target = (TreeBranch<T, U>, NodeOffset);
+
+    fn into_inner(self) -> (TreeBranch<T, U>, NodeOffset) {
         (self.0, self.1)
     }
 }
-
 /// Trait for performing inspection operations on a given node
 pub trait InspectNode<'a, T: Ord, U: TreeBalance>
     where Self: std::marker::Sized {
@@ -72,6 +73,9 @@ pub trait InspectNode<'a, T: Ord, U: TreeBalance>
 
     /// Returns the leaf count of the given node
     fn inspect_leaves(&self) -> usize;
+
+    /// Checks if the given node is a root node
+    fn inspect_is_root(&self) -> bool;
 }
 
 impl <'a, T: Ord, U: TreeBalance> BranchInspector<'a, T, U> {
@@ -84,13 +88,6 @@ impl <'a, T: Ord, U: TreeBalance> BranchInspector<'a, T, U> {
 }
 
 impl <T: Ord, U: TreeBalance> NodeInspector<T, U> {
-
-    /// Constructor for creating a NodeInspector
-    /// for a subtree starting at the given node
-    pub fn from(branch: TreeBranch<T, U>) -> NodeInspector<T, U>{
-        NodeInspector (branch)
-    }
-
     /// Performs a rotate around the root of the subtree with the given case
     /// 
     /// Note: paths are flipped.  This is to make it simpler to handle performing a rotation
@@ -103,11 +100,6 @@ impl <T: Ord, U: TreeBalance> NodeInspector<T, U> {
         NodeInspector (bst_rotate(self.0, case.0))
     }
 
-    /// Checks if the given node is a root node
-    pub fn inspect_is_root(&self) -> bool {
-        self.0.borrow().get_parent().is_none()
-    }
-
     /// Consumed the inspector returning a position along the full tree
     /// relative to the root of the subtree this inspector exposed
     pub fn into_position(self, pos: NodeOffset) -> TreePosition<T, U> {
@@ -115,6 +107,17 @@ impl <T: Ord, U: TreeBalance> NodeInspector<T, U> {
     }
 
 }
+
+impl <T: Ord, U: TreeBalance> Open for NodeInspector<T, U> {
+    type Target = TreeBranch<T, U>;
+
+    /// Constructor for creating a NodeInspector
+    /// for a subtree starting at the given node
+    fn open(branch: TreeBranch<T, U>) -> NodeInspector<T, U>{
+        NodeInspector (branch)
+    }
+}
+
 
 impl <'a, T: Ord, U: TreeBalance> InspectNode<'a, T, U> for NodeInspector<T, U> {
 
@@ -144,6 +147,10 @@ impl <'a, T: Ord, U: TreeBalance> InspectNode<'a, T, U> for NodeInspector<T, U> 
 
     fn inspect_leaves(&self) -> usize {
         self.0.borrow().get_leaves()
+    }
+
+    fn inspect_is_root(&self) -> bool {
+        self.0.borrow().get_parent().is_none()
     }
 
 }
@@ -176,6 +183,11 @@ impl <'a, T: Ord, U: TreeBalance> InspectNode<'a, T, U> for BranchInspector<'a, 
 
     fn inspect_leaves(&self) -> usize {
         self.get_branch().borrow().get_leaves()
+    }
+
+    fn inspect_is_root(&self) -> bool {
+        // A child will always not be the root
+        false
     }
 
 }
