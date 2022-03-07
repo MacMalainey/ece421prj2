@@ -59,7 +59,7 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
         Tree::<T, U>(None)
     }
 
-    /// Creates a new tree, wraping the given [TreeBranch]
+    /// Creates a new tree, wrapping the given [TreeBranch]
     fn new_with(branch: TreeBranch<T, U>) -> Self {
         Tree(Some(branch))
     }
@@ -173,7 +173,7 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
 
     /// Get the number of leaves of the tree
     /// 
-    /// Returns the number of leaf nodes (nodes with no childen) in the tre
+    /// Returns the number of leaf nodes (nodes with no children) in the tre
     /// 
     /// ```
     /// use project2::tree::Tree;
@@ -201,7 +201,7 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
     /// Get a reference to the branch this wraps
     /// 
     /// Returns a reference to the [TreeBranch] that this tree wraps
-    /// to make traversal more convient when performing operations on the tree
+    /// to make traversal more convenient when performing operations on the tree
     fn branch(&self) -> Option<&TreeBranch<T, U>> {
         self.0.as_ref()
     }
@@ -255,7 +255,7 @@ where
 // Private traits to expose needed functions from [inspect] to [ops] but not outside of the crate.
 //
 // Could refactor to remove the requirement for these
-// but I prefere this module structure and this is a small
+// but I prefer this module structure and this is a small
 // amount of code bloat required to maintain it.
 
 // Unwrapper for TreePosition

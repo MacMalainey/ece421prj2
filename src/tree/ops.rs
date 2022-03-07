@@ -83,7 +83,7 @@ pub fn bst_insert<T: Ord, U: TreeBalance>(root: Tree<T, U>, key: T) -> Tree<T, U
                         }),
                         // In our implemented cases (AVL, Red Black, Unbalanced) this shouldn't happen.
                         // However, to allow for implementing other balancing methods it might be useful to allow this case
-                        // If more time was budgetted this might be worth implementing
+                        // If more time was budgeted this might be worth implementing
                         NodeOffset::Child(_) => panic!("Should not happen!")
                     }
                 };

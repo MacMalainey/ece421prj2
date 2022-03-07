@@ -50,7 +50,7 @@ impl TreeBalance for AVLBalance {
                 let inline_height = pnode.inspect_child(ppath).map_or(0, |x| x.inspect_height());
                 let elbow_height = pnode.inspect_child(ppath.reflect()).map_or(0, |x| x.inspect_height());
 
-                // Optimize selection to prevent unneccessary rotation
+                // Optimize selection to prevent unnecessary rotation
                 if inline_height >= elbow_height {
                     ppath
                 } else {
