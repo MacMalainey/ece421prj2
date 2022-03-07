@@ -2,11 +2,16 @@
 \usepackage[utf8]{inputenc}
 \usepackage{geometry}
 \usepackage{hyperref}
+\usepackage{minted}
+\usepackage{color,graphicx,overpic} 
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\setmintedinline{bgcolor=bg,style=bw}
 
 % Indentation/space between paragraphs
 \setlength{\headheight}{15pt}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{0pt}
+\setlength{\parskip}{15pt}
 
 % Line spacing
 \renewcommand{\baselinestretch}{1.3} 
@@ -39,7 +44,7 @@
 \subsection{Custom TreeBalance Implementations}
 As a result of working towards our goal of implementing a Red Black Tree and AVL Tree with shared components,
 we designed a system that allows library users to implement their own algorithm to perform adjustments
-to the tree structure after insertion or deletion.  This system allows users to implement the TreeBalance
+to the tree structure after insertion or deletion.  This system allows users to implement the \mintinline{text}{TreeBalance}
 trait within their own code and use that for performing balances on the tree after the structure changes.
 While the library does already expose the common Red Black Tree and AVL Tree types, because of how they were implemented
 we were able to expose this method to create a ``custom balance" so that users may implement ones that better suit their needs.
@@ -49,10 +54,10 @@ Instead of a balanced tree, it might be better for the user to have a binary sea
 A case for this could be when working a very large tree that will rarely search for elements that would be on the far right,
 but is mostly going to be used to search for elements on the far left.  Providing a custom balancing algorithm to skew the tree
 such that the far left is closer to the middle could provide a performance boost in the long term.  The exposure of the
-TreeBalance trait allows library users to do just that, without having to be concerned about implementing the entire tree.
+\mintinline{text}{TreeBalance} trait allows library users to do just that, without having to be concerned about implementing the entire tree.
 Furthermore, they still have access to the AVL Tree and Red Black Tree types if those end up being required as well.
 
-Additionally, from the TreeBalance trait we implemented a non-balancing tree (plain binary search tree) and exposed that type as well.
+Additionally, from the \mintinline{text}{TreeBalance} trait we implemented a non-balancing tree (plain binary search tree) and exposed that type as well.
 
 \newpage
 \section{Design}
@@ -60,7 +65,7 @@ Additionally, from the TreeBalance trait we implemented a non-balancing tree (pl
 \subsection{Rationale}
 
 This crate was designed based on the requirement of the implementation of both a Red Black Tree and an AVL Tree
-for generalized types.  In essence a Red Black Tree and an AVL Tree are both Binary Search Trees but with balancing checks
+for generalized types.  In essence, a Red Black Tree and an AVL Tree are both Binary Search Trees but with balancing checks
 and operations that are executed whenever the structure of the tree changes (an insertion or deletion occurs).
 From this the idea of a balanced tree can be broke into two components: a Binary Search Tree and a balancing algorithm.
 
@@ -70,17 +75,17 @@ Further investigation into the nature of the AVL and Red Black algorithms displa
     \item Perform a rotation on the first/second levels of the subtree
 \end{itemize}
 
-Firstly, this revealed that neither algorithm was proactive in tree operations but instead are reactive
+This revealed that neither algorithm was proactive in tree operations but instead are reactive
 (has no say in how the actual is operation performed, instead uses the changes in the tree structure to rebalance after the fact).
 From that, it became clear that performing operations on the tree and the act of rebalancing do not influence each other except through
 their changes to the tree.  Therefore tree operations can be opaque to the balancing algorithms (aside from performing rotations).
 
-Secondly we find that as long as the balancing algorithms are provided a way to inspect the structure of the tree they do not require
+Additionally, we find that as long as the balancing algorithms are provided a way to inspect the structure of the tree they do not require
 access to any of the actual structure of it, aside from a method to perform rotations on the tree.  This became the motivation for
-the [inspect] components that hide away the tree's internal code structure so that the balancing algorithm is not able to break
+the \mintinline{text}{tree::inspect} components that hide away the tree's internal code structure so that the balancing algorithm is not able to break
 the contract of a binary search tree.  If the internal workings of the tree are safely abstracted away then any balancing algorithm can
-be implemented with the guarantee that the tree will remain a binary search tree after rebalancing.  This allowed us to not only safely implement
-the AVL Tree and Red Black Tree algorithms with those guarantees, but expose the [TreeBalance] trait to the public for custom implementation.
+be implemented with the guarantee that the tree will remain a binary search tree after rebalancing. This allowed us to not only safely implement
+the AVL Tree and Red Black Tree algorithms with those guarantees, but expose the \mintinline{text}{TreeBalance} trait to the public for custom implementation.
 And any operations that could break the tree's structure are guarded using panics (not recoverable errors as contract breaking changes are always preventable)
 
 However, there was one decision still to be identified: how would we associate a balancing function with a given tree.
@@ -91,47 +96,47 @@ From this we realized that a balancing algorithm should be allowed access to a m
 To summarize our decision was to create a binary search tree whose programatical structure and how it performed operations were opaque
 to any balancing algorithm, but would use an associated balancing algorithm (defined at compile-time and whose implementation is mostly opaque to the tree)
 after a successful tree operation to perform rebalancing on the tree (with optional mutable access to metadata only used and adjusted by the balancer).
-We also required error handling on public [Tree] methods since cases where a delete or insertion fail can occur acceptably.
+We also required error handling on public \mintinline{text}{Tree} methods since cases where a delete or insertion fail can occur acceptably.
 
 \subsection{Analysis}
 \subsubsection{Crate Structure}
 There are four main things this crate exposes:
-\begin{description}
-    \item[Tree] The public interface for a binary search tree
-    \item[AVLTree] implementation of an AVLTree on a [Tree] using the [TreeBalance] trait
-    \item[RedBlackTree] implementation of an RedBlackTree on a [Tree] using the [TreeBalance] trait
-    \item[TreeBalance] trait definition for implementing a type a [Tree] will use to perform balancing operations
-\end{description}
+\begin{itemize}
+    \item \mintinline{text}{Tree} - the public interface for a binary search tree
+    \item \mintinline{text}{AVLTree} - implementation of an AVLTree on a \mintinline{text}{Tree} using the \mintinline{text}{TreeBalance} trait
+    \item \mintinline{text}{RedBlackTree} - implementation of an RedBlackTree on a \mintinline{text}{Tree} using the \mintinline{text}{TreeBalance} trait
+    \item \mintinline{text}{TreeBalance} - trait definition for implementing a type a \mintinline{text}{Tree} will use to perform balancing operations
+\end{itemize}
 \hfill \break
 \noindent The crate is organized into the following modules:
-\begin{description}
-    \item[lib] Top level library that exposes necessary components outside the crate
-    \item[main] CLI Demo code
-    \item[avl] The AVL Tree implementation of the [TreeBalance] trait
-    \item[redblack] The Red Black Tree implementation of the [TreeBalance] trait
-    \item[tree] [Tree] definition and implementation, submodules are further implementation dependencies
-    \item[tree::inspect] Holds trait definitions, structs, and enums required and related to the [TreeBalance] trait
-    \item[tree::ops] Holds functions to perform operations on a tree
-    \item[tree::node] Holds struct definition for a node in the tree
-\end{description}
+\begin{itemize}
+    \item \mintinline{text}{lib} - top level library that exposes necessary components outside the crate
+    \item \mintinline{text}{main} - CLI Demo code
+    \item \mintinline{text}{avl} - the AVL Tree implementation of the \mintinline{text}{TreeBalance} trait
+    \item \mintinline{text}{redblack} - the Red Black Tree implementation of the \mintinline{text}{TreeBalance} trait
+    \item \mintinline{text}{tree} - \mintinline{text}{Tree} definition and implementation, submodules are further implementation dependencies
+    \item \mintinline{text}{tree::inspect} - holds trait definitions, structs, and enums required and related to the \mintinline{text}{TreeBalance} trait
+    \item \mintinline{text}{tree::ops} - holds functions to perform operations on a tree
+    \item \mintinline{text}{tree::node} - holds struct definition for a node in the tree
+\end{itemize}
 
-\subsubsection{[Tree] Structure}
-A [Tree] acts as both the public facing interface for working with a binary search tree as well as
+\subsubsection{Tree Structure}
+A \mintinline{text}{Tree} acts as both the public facing interface for working with a binary search tree as well as
 acting as a way a container for pointers to a node's child objects as it will possibly contain
-a pointer to a [TreeNode].  A [TreeNode] is an actual node in a tree stored on the heap that contains the
-key, parent and children pointers, and metadata regarding the tree's structure.  Any type that implements the [TreeBalance] trait
-can be used associated with a [Tree] type so it is used to perform balancing after operations.
-As a method to safeguard a [Tree]'s internal structure when a rebalance is requested a [NodeInspector] is passed into the
-the relevant [TreeBalance] trait function as a handle that can be used to inspect the tree's structure and perform rotations as necessary.
-A [Tree] must have an associated [TreeBalance] trait with it (types are associated at compiled time through generics).
+a pointer to a \mintinline{text}{TreeNode}.  A \mintinline{text}{TreeNode} is an actual node in a tree stored on the heap that contains the
+key, parent and children pointers, and metadata regarding the tree's structure.  Any type that implements the \mintinline{text}{TreeBalance} trait
+can be used associated with a \mintinline{text}{Tree} type so it is used to perform balancing after operations.
+As a method to safeguard a \mintinline{text}{Tree}'s internal structure when a rebalance is requested a \mintinline{text}{NodeInspector} is passed into the
+the relevant \mintinline{text}{TreeBalance} trait function as a handle that can be used to inspect the tree's structure and perform rotations as necessary.
+A \mintinline{text}{Tree} must have an associated \mintinline{text}{TreeBalance} trait with it (types are associated at compiled time through generics).
 
 \subsection{Extension}
-As mentioned already the code is fairly extensible by custom implementing the [TreeBalance] trait and using the associated
-[NodeInspector] and related types.  However, in regards to adjustments required to implement a more complex type of tree such, as a 2-3-4 Tree or a B-Tree,
-we would need to significantly change the design of the [Tree] structure.  First of we would need to generalize how child nodes are indexed, therefore allowing
+As mentioned already the code is fairly extensible by custom implementing the \mintinline{text}{TreeBalance} trait and using the associated
+\mintinline{text}{NodeInspector} and related types.  However, in regards to adjustments required to implement a more complex type of tree such, as a 2-3-4 Tree or a B-Tree,
+we would need to significantly change the design of the \mintinline{text}{Tree} structure.  First of we would need to generalize how child nodes are indexed, therefore allowing
 more than two children per node (and it becoming opaque to the operation functions, to be implemented outside of the structure).
-Secondly, nodes will need to be multi-keyed meaning we will need to adjust how we handle the [TreeNode] to allow for multiple keys.
-Lastly, the [Tree] structure invokes the balancing algorithm in as a reaction to structure change, a B-Tree and 2-3-4 Tree are balanced
+Secondly, nodes will need to be multi-keyed meaning we will need to adjust how we handle the \mintinline{text}{TreeNode} to allow for multiple keys.
+Lastly, the \mintinline{text}{Tree} structure invokes the balancing algorithm in as a reaction to structure change, a B-Tree and 2-3-4 Tree are balanced
 proactively (before the insertion is made).  This would require providing the balancing algorithm access during search now on top of when travelling back up the tree
 (if we want to continue to provide support for the AVLTree case).  Furthermore we would also need to expose a splitting operation for multi-key nodes.
 Overall, for complex multikey and multi-path nodes this is not easily extensible, a large rewrite of the library would be required.
@@ -162,9 +167,9 @@ checking the surrounding node's colors before deciding it is that special case a
 
 \subsection{Comparison}
 For every case the AVL Tree performs noticeably better than the Red Black Tree illustrating that the AVL Tree is more efficient.
-However, this conclusion really can only be said for this worst possible "insert and search" case.  This does not provide insight on best case behaviour or on random behaviour.
+However, this conclusion really can only be said for this worst possible ``insert and search" case.  This does not provide insight on best case behavior or on random behavior.
 Furthermore we have no benchmarks for any deletion case.  These additional benchmarks would be valuable data for getting a more complete picture on how
-the two data structures differ performance wise.  As well, if we have any knowledge of the data we expect to recieve we can use the additional bookmarks to select the best data structure for the
+the two data structures differ performance wise.  As well, if we have any knowledge of the data we expect to receive we can use the additional bookmarks to select the best data structure for the
 case we are most likely to match.
 
 Using a binary search tree as a baseline measurement is not likely to be necessary.  We know that the worst case complexity of the AVL Tree and Red Black Tree are better than
@@ -177,34 +182,53 @@ more information regarding what sort of tree would be the best fit for our use c
 \section{User Manual}
 
 \subsection{Tree}
-The [Tree\textless T, U\textgreater ] type represents a binary search tree to search [T] and is balanced by [U].
-The following are methods of the public interface for manipulating a [Tree] instance:
-\begin{description}
-    \item[Tree::new] Constructs an empty tree
-    \item[Tree::is\_empty] Returns true if the tree has no nodes
-    \item[Tree::insert] Inserts a key, rebalancing using [U]
-    \item[Tree::search] Returns true if the key was found in the tree
-    \item[Tree::delete] Removes and returns a key, rebalancing using [U]
-    \item[Tree::height] Returns the height of the tree
-    \item[Tree:leaves] Returns the number of leaf nodes in the tree   
-\end{description}
+The  \mintinline{text}{Tree T, U} type represents a binary search tree to search  \mintinline{text}{T} and is balanced by \mintinline{text}{U}.
+The following are methods of the public interface for manipulating a \mintinline{text}{Tree} instance:
+\begin{itemize}
+    \item \mintinline{text}{Tree::new} - constructs an empty tree
+    \item \mintinline{text}{Tree::is_empty} - returns true if the tree has no nodes
+    \item \mintinline{text}{Tree::insert} - inserts a key, rebalancing using  \mintinline{text}{U}
+    \item \mintinline{text}{Tree::search} - returns true if the key was found in the tree
+    \item \mintinline{text}{Tree::delete} - removes and returns a key, rebalancing using  \mintinline{text}{U}
+    \item \mintinline{text}{Tree::height} - returns the height of the tree
+    \item \mintinline{text}{Tree:leaves} - returns the number of leaf nodes in the tree   
+\end{itemize}
 
 \subsection{Pre-Defined Types}
-The following are other predefined types for basic [Tree] usage
-\begin{description}
-    \item[avl::AVLBalance] [TreeBalance] type using AVL Tree rules
-    \item[AVLTree] Typedef for tree that uses [AVLBalance]
-    \item[redblack::RedBlackTree] [TreeBalance] type using Red Black Tree rules
-    \item[RedBlackTree] Typedef for tree that uses [RedBlackBalance]
-    \item[BinarySearchTree] Typedef for a tree that doesn't perform any balancing
-\end{description}
+The following are other predefined types for basic \mintinline{text}{Tree} usage
+\begin{itemize}
+    \item \mintinline{text}{avl::AVLBalance} - \mintinline{text}{TreeBalance} type using AVL Tree rules
+    \item \mintinline{text}{AVLTree} - typedef for tree that uses AVLBalance
+    \item \mintinline{text}{redblack::RedBlackTree} - \mintinline{text}{TreeBalance} type using Red Black Tree rules
+    \item \mintinline{text}{RedBlackTree} - typedef for tree that uses  \mintinline{text}{RedBlackBalance}
+    \item \mintinline{text}{BinarySearchTree} - typedef for a tree that doesn't perform any balancing
+\end{itemize}
 
 \subsection{TreeBalance Trait Implementation}
-The [TreeBalance] trait can be used to perform rebalancing on a tree using custom rules.
-A type that implements the trait and is associated with a [Tree] instance will have the trait functions called
-to perform rebalancing.  Review [TreeBalance] and relevant type documentation for more information as we will not
+The \mintinline{text}{TreeBalance} trait can be used to perform rebalancing on a tree using custom rules.
+A type that implements the trait and is associated with a \mintinline{text}{Tree} instance will have the trait functions called
+to perform rebalancing.  Review \mintinline{text}{TreeBalance} and relevant type documentation for more information as we will not
 describe it further here.
 
 \subsection{CLI Demo}
+We have built a CLI that allows users to test both the Red Black Tree and the AVL Tree. Upon starting the program (located in \mintinline{text}{main.rs}), the user will be greeted by a welcome message. The user will also be prompted to select which type of tree they would like to test. In order to test a Red Black Tree, the user needs to enter `1'; to test an AVL Tree, the user needs to enter `2'. 
+
+Upon selecting a tree, the user will be presented with a list of commands. Here is a summary of the commands available:
+\begin{itemize}
+    \item \mintinline{text}{insert <n>}     - insert \mintinline{text}{<n>} into the tree
+    \item \mintinline{text}{delete <n>}     - delete \mintinline{text}{<n>} from the tree
+    \item \mintinline{text}{search <n>}     - output whether \mintinline{text}{<n>} is in the tree or not
+    \item \mintinline{text}{clear}          - clear all elements from the tree
+    \item \mintinline{text}{isempty}        - output whether the tree is empty or not
+    \item \mintinline{text}{height}         - output the height of the tree
+    \item \mintinline{text}{leaves}         - output the number of leaves in the tree
+    \item \mintinline{text}{print tree}     - print formatted tree
+    \item \mintinline{text}{print inorder}  - print elements using inorder traversal
+    \item \mintinline{text}{switch}         - select a new tree type
+    \item \mintinline{text}{help}           - reprint this menu
+    \item \mintinline{text}{exit}           - exit program
+\end{itemize}
+
+For example, let's say we want to select an AVL Tree and insert 3, 5, and 2 into the tree. We would first enter `2' followed by \mintinline{text}{insert 3}, \mintinline{text}{insert 5}, and \mintinline{text}{insert 2}.
 
 \end{document}

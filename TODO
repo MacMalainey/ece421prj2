@@ -21,17 +21,17 @@
 
 [x] - Write unbalanced tree
 
-[X] - CLI
-    [X] - Allow choosing of the type tree (and switching between them)
-    [X] - Allow deleting from the tree
-    [X] - Allow inserting into the tree
-    [X] - Allow searching the tree
-    [X] - Allow clearing the tree
-    [X] - Allow pretty printing (use Debug trait with pretty print flag) of the tree
-    [X] - Allow inorder printing (use Display trait) of the tree
-    [X] - Allow checking if the tree is empty
-    [X] - Allow checking the height of the tree
-    [X] - Allow checking the number of leaves on the tree
+[x] - CLI
+    [x] - Allow choosing of the type tree (and switching between them)
+    [x] - Allow deleting from the tree
+    [x] - Allow inserting into the tree
+    [x] - Allow searching the tree
+    [x] - Allow clearing the tree
+    [x] - Allow pretty printing (use Debug trait with pretty print flag) of the tree
+    [x] - Allow inorder printing (use Display trait) of the tree
+    [x] - Allow checking if the tree is empty
+    [x] - Allow checking the height of the tree
+    [x] - Allow checking the number of leaves on the tree
 
 [x] - Benchmarks
     [x] - Comment on results
@@ -57,9 +57,9 @@
     [x] - Known errors, faults, defects, missing functionality
         [x] - Missing functionality for DIY balance API
             [x] - Only move once relative to node (Lacking Robustness)
-    [] - User Manual
+    [x] - User Manual
         [x] - Using a Tree
         [x] - Using pre-made balances
         [x] - Using DIY balance API
-        [] - Using CLI
+        [x] - Using CLI
     [] - 2 Minute video for marketting
