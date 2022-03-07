@@ -21,12 +21,12 @@
 
 [x] - Write unbalanced tree
 
-[] - CLI
+[X] - CLI
     [X] - Allow choosing of the type tree (and switching between them)
     [X] - Allow deleting from the tree
     [X] - Allow inserting into the tree
     [X] - Allow searching the tree
-    [] - Allow clearing the tree
+    [X] - Allow clearing the tree
     [X] - Allow pretty printing (use Debug trait with pretty print flag) of the tree
     [X] - Allow inorder printing (use Display trait) of the tree
     [X] - Allow checking if the tree is empty

@@ -97,10 +97,11 @@ fn manipulate_tree<U: TreeBalance + Debug>(mut tree: Tree<u32, U>) {
             if input.len() >= 2 {
                 match &input[1].parse::<u32>() {
                     Ok(n) => {
-                        tree.insert(*n)
+                        tree.insert(*n);
+                        println!("Inserted {}.", n);
                     },
                     Err(_) => {
-                        println!("Enter an unsigned integer.")
+                        println!("Enter an unsigned integer.");
                     },
                 };
             } else {
@@ -114,7 +115,9 @@ fn manipulate_tree<U: TreeBalance + Debug>(mut tree: Tree<u32, U>) {
                             None => {
                                 println!("Did not find {}.", n);
                             }
-                            _ => {}
+                            Some(_) => {
+                                println!("Deleted {}.", n);
+                            }
                         }
                     },
                     Err(_) => {
@@ -142,7 +145,8 @@ fn manipulate_tree<U: TreeBalance + Debug>(mut tree: Tree<u32, U>) {
                 println!("Missing argument!");
             }
         } else if command == "clear" {
-
+            tree.clear();
+            println!("Tree has been cleared.");
         } else if command == "isempty" {
             println!("Is empty: {}", tree.is_empty());
         } else if command == "height" {
