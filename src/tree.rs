@@ -50,8 +50,8 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
     /// Creates a new empty tree
     /// 
     /// ```
-    /// # use project2::tree::Tree;
-    /// # use project2::avl::AVLBalance;
+    /// use project2::tree::Tree;
+    /// use project2::avl::AVLBalance;
     /// let tree = Tree::<usize, AVLBalance>::new();
     /// assert!(tree.is_empty());
     /// ```
@@ -67,8 +67,8 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
     /// Returns true if the tree has no contents
     /// 
     /// ```
-    /// # use project2::tree::Tree;
-    /// # use project2::avl::AVLBalance;
+    /// use project2::tree::Tree;
+    /// use project2::avl::AVLBalance;
     /// let mut tree = Tree::<usize, AVLBalance>::new();
     /// assert!(tree.is_empty());
     /// // Insert 2
@@ -88,8 +88,8 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
     /// provided by the associated [TreeBalance] type
     /// 
     /// ```
-    /// # use project2::tree::Tree;
-    /// # use project2::avl::AVLBalance;
+    /// use project2::tree::Tree;
+    /// use project2::avl::AVLBalance;
     /// let mut tree = Tree::<usize, AVLBalance>::new();
     /// // Insert 2
     /// tree.insert(2);
@@ -128,8 +128,8 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
     /// using the instructions provided from the associated [TreeBalance]
     /// 
     /// ```
-    /// # use project2::tree::Tree;
-    /// # use project2::avl::AVLBalance;
+    /// use project2::tree::Tree;
+    /// use project2::avl::AVLBalance;
     /// let mut tree = Tree::<usize, AVLBalance>::new();
     /// 
     /// assert!(tree.is_empty());
@@ -153,8 +153,8 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
     /// Returns the length of the longest path from the root node to any leaf node
     /// 
     /// ```
-    /// # use project2::tree::Tree;
-    /// # use project2::avl::AVLBalance;
+    /// use project2::tree::Tree;
+    /// use project2::avl::AVLBalance;
     /// let mut tree = Tree::<usize, AVLBalance>::new();
     /// 
     /// assert_eq!(tree.height(), 0);
@@ -176,8 +176,8 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
     /// Returns the number of leaf nodes (nodes with no childen) in the tre
     /// 
     /// ```
-    /// # use project2::tree::Tree;
-    /// # use project2::avl::AVLBalance;
+    /// use project2::tree::Tree;
+    /// use project2::avl::AVLBalance;
     /// let mut tree = Tree::<usize, AVLBalance>::new();
     /// 
     /// assert_eq!(tree.leaves(), 0);

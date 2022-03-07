@@ -3,8 +3,8 @@ pub mod tree;
 pub mod redblack;
 mod unbalanced; // Left private because if anyone really requires it, they can just use the typedef
 
-use tree::Tree;
 // Typedefs for easy access
+pub type Tree<T, U> = tree::Tree<T, U>;
 pub type AVLTree<T> = Tree<T, avl::AVLBalance>;
 pub type RedBlackTree<T> = Tree<T, redblack::RedBlackBalance>;
 pub type BinarySearchTree<T> = Tree<T, unbalanced::UnbalancedBalance>;

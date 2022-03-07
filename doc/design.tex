@@ -161,14 +161,38 @@ that of a binary search tree and the comparison is between the two trees.  Howev
 so we may get a better picture of how more general cases actually compare.  It might also be beneficial to include benchmarks for 2-3-4 Trees and B-Trees.  Again, this way we can get
 more information regarding what sort of tree would be the best fit for our use case (provided we know anything in advance about how the tree will get used most commonly).
 
+\pagebreak
 
 \section{User Manual}
 
 \subsection{Tree}
+The [Tree\textless T, U\textgreater ] type represents a binary search tree to search [T] and is balanced by [U].
+The following are methods of the public interface for manipulating a [Tree] instance:
+\begin{description}
+    \item[Tree::new] Constructs an empty tree
+    \item[Tree::is\_empty] Returns true if the tree has no nodes
+    \item[Tree::insert] Inserts a key, rebalancing using [U]
+    \item[Tree::search] Returns true if the key was found in the tree
+    \item[Tree::delete] Removes and returns a key, rebalancing using [U]
+    \item[Tree::height] Returns the height of the tree
+    \item[Tree:leaves] Returns the number of leaf nodes in the tree   
+\end{description}
 
 \subsection{Pre-Defined Types}
+The following are other predefined types for basic [Tree] usage
+\begin{description}
+    \item[avl::AVLBalance] [TreeBalance] type using AVL Tree rules
+    \item[AVLTree] Typedef for tree that uses [AVLBalance]
+    \item[redblack::RedBlackTree] [TreeBalance] type using Red Black Tree rules
+    \item[RedBlackTree] Typedef for tree that uses [RedBlackBalance]
+    \item[BinarySearchTree] Typedef for a tree that doesn't perform any balancing
+\end{description}
 
 \subsection{TreeBalance Trait Implementation}
+The [TreeBalance] trait can be used to perform rebalancing on a tree using custom rules.
+A type that implements the trait and is associated with a [Tree] instance will have the trait functions called
+to perform rebalancing.  Review [TreeBalance] and relevant type documentation for more information as we will not
+describe it further here.
 
 \subsection{CLI Demo}
 

@@ -57,8 +57,8 @@
         [x] - Missing functionality for DIY balance API
             [x] - Only move once relative to node (Lacking Robustness)
     [] - User Manual
-        [] - Using a Tree
-        [] - Using pre-made balances
-        [] - Using DIY balance API
+        [x] - Using a Tree
+        [x] - Using pre-made balances
+        [x] - Using DIY balance API
         [] - Using CLI
     [] - 2 Minute video for marketting
