@@ -211,6 +211,24 @@ to perform rebalancing.  Review \mintinline{text}{TreeBalance} and relevant type
 describe it further here.
 
 \subsection{CLI Demo}
-We have built a CLI that allows users to test both the Red Black Tree and the AVL Tree. Upon starting the program (located in \mintinline{text}{main.rs}), the user will be greeted by a welcome message. The user will also be prompted to select which type of tree they would like to test. In order to test a Red Black Tree, the user needs to enter `1'; to test an AVL Tree, the user needs to enter `2'.
+We have built a CLI that allows users to test both the Red Black Tree and the AVL Tree. Upon starting the program (located in \mintinline{text}{main.rs}), the user will be greeted by a welcome message. The user will also be prompted to select which type of tree they would like to test. In order to test a Red Black Tree, the user needs to enter `1'; to test an AVL Tree, the user needs to enter `2'. 
+
+Upon selecting a tree, the user will be presented with a list of commands. Here is a summary of the commands available:
+\begin{itemize}
+    \item \mintinline{text}{insert <n>}     - insert \mintinline{text}{<n>} into the tree
+    \item \mintinline{text}{delete <n>}     - delete \mintinline{text}{<n>} from the tree
+    \item \mintinline{text}{search <n>}     - output whether \mintinline{text}{<n>} is in the tree or not
+    \item \mintinline{text}{clear}          - clear all elements from the tree
+    \item \mintinline{text}{isempty}        - output whether the tree is empty or not
+    \item \mintinline{text}{height}         - output the height of the tree
+    \item \mintinline{text}{leaves}         - output the number of leaves in the tree
+    \item \mintinline{text}{print tree}     - print formatted tree
+    \item \mintinline{text}{print inorder}  - print elements using inorder traversal
+    \item \mintinline{text}{switch}         - select a new tree type
+    \item \mintinline{text}{help}           - reprint this menu
+    \item \mintinline{text}{exit}           - exit program
+\end{itemize}
+
+For example, let's say we want to select an AVL Tree and insert 3, 5, and 2 into the tree. We would first enter `2' followed by \mintinline{text}{insert 3}, \mintinline{text}{insert 5}, and \mintinline{text}{insert 2}.
 
 \end{document}
