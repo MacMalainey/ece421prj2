@@ -4,7 +4,7 @@
 \usepackage{hyperref}
 \usepackage{minted}
 \usepackage{color,graphicx,overpic} 
-
+\usepackage{paracol}
 \definecolor{bg}{rgb}{0.95,0.95,0.95}
 \setmintedinline{bgcolor=bg,style=bw}
 
@@ -146,24 +146,166 @@ multiple different node types (binary tree node, multi-key node, etc) and have m
 \section{Known Issues}
 
 \subsection{TreeBalance Trait Implementation}
-The implementation of the TreeBalance trait is not as robust as it could be and is lacking some important features.
+The implementation of the \mintinline{text}{TreeBalance} trait is not as robust as it could be and is lacking some important features.
 However these features have no impact on whether or not the AVL Tree and Red Black Tree work correctly.
 
 \noindent The issue is that simply right now you cannot:
 \begin{itemize}
     \item Travel more than one node (other than going to root) when returning the next position to go on the tree from a rebalance function.
-    \item Travel to a child node when returning the next position to go on the tree from the [rebalance\_insert] function.
+    \item Travel to a child node when returning the next position to go on the tree from the \mintinline{text}{rebalance_insert} function.
 \end{itemize}
 
 This feature loss might cause a minor performance impact for the Red Black Tree as it has a case where it is beneficial
 to move up two parents at once.  However we have implemented a fix for this, but it might be slower as it still requires
 checking the surrounding node's colors before deciding it is that special case and moves up a parent again.
 
+\newpage 
 \section{Benchmarking}
+These stats are generated on a Windows 10 PC with an AMD Ryzen 7 5800X CPU and 32GB of RAM. 
 
 \subsection{Red Black Tree}
+The following chart shows the relationship between function/parameter and iteration time. The thickness of the shaded region indicates the probability that a measurement of the given function/parameter would take a particular length of time.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=15cm]{benchmarks/Red_black_tree/violin.png}
+    \label{Violin}
+\end{figure}
 
+The following chart shows the mean measured time for each function as the input (or the size of the input) increases. \\
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=8cm]{benchmarks/Red_black_tree/line.png}
+    \label{Line}
+\end{figure}
+
+\mintinline{text}{Balanced Tree Insert + Search/Red Black Tree/10000}
+\columnratio{0.75}
+\begin{paracol}{3}
+    \centering        
+    \includegraphics[width=11cm]{benchmarks/Red_black_tree/10000/plots.png}
+    \switchcolumn
+    \vspace*{\fill}
+    \includegraphics[width=4cm]{benchmarks/Red_black_tree/10000/stats.png}
+    \vspace*{\fill}
+\end{paracol}
+
+\mintinline{text}{Balanced Tree Insert + Search/Red Black Tree/40000}
+\columnratio{0.75}
+\begin{paracol}{3}
+    \centering        
+    \includegraphics[width=11cm]{benchmarks/Red_black_tree/40000/plots.png}
+    \switchcolumn
+    \vspace*{\fill}
+    \includegraphics[width=4cm]{benchmarks/Red_black_tree/40000/stats.png}
+    \vspace*{\fill}
+\end{paracol}
+
+\mintinline{text}{Balanced Tree Insert + Search/Red Black Tree/70000}
+\columnratio{0.75}
+\begin{paracol}{3}
+    \centering        
+    \includegraphics[width=11cm]{benchmarks/Red_black_tree/70000/plots.png}
+    \switchcolumn
+    \vspace*{\fill}
+    \includegraphics[width=4cm]{benchmarks/Red_black_tree/70000/stats.png}
+    \vspace*{\fill}
+\end{paracol}
+
+\newpage
+\mintinline{text}{Balanced Tree Insert + Search/Red Black Tree/100000}
+\columnratio{0.75}
+\begin{paracol}{3}
+    \centering        
+    \includegraphics[width=11cm]{benchmarks/Red_black_tree/100000/plots.png}
+    \switchcolumn
+    \vspace*{\fill}
+    \includegraphics[width=4cm]{benchmarks/Red_black_tree/100000/stats.png}
+    \vspace*{\fill}
+\end{paracol}
+
+\mintinline{text}{Balanced Tree Insert + Search/Red Black Tree/130000}
+\columnratio{0.75}
+\begin{paracol}{3}
+    \centering        
+    \includegraphics[width=11cm]{benchmarks/Red_black_tree/130000/plots.png}
+    \switchcolumn
+    \vspace*{\fill}
+    \includegraphics[width=4cm]{benchmarks/Red_black_tree/130000/stats.png}
+    \vspace*{\fill}
+\end{paracol}
+\newpage
 \subsection{AVL Tree}
+The following chart shows the relationship between function/parameter and iteration time. The thickness of the shaded region indicates the probability that a measurement of the given function/parameter would take a particular length of time.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=15cm]{benchmarks/AVL/violin.png}
+    \label{Violin_AVL}
+\end{figure}
+
+The following chart shows the mean measured time for each function as the input (or the size of the input) increases. \\
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=8cm]{benchmarks/AVL/line.png}
+    \label{Line_AVL}
+\end{figure}
+\newpage
+\mintinline{text}{Balanced Tree Insert + Search/AVL Tree/10000}
+\columnratio{0.75}
+\begin{paracol}{3}
+    \centering        
+    \includegraphics[width=11cm]{benchmarks/AVL/10000/plots.png}
+    \switchcolumn
+    \vspace*{\fill}
+    \includegraphics[width=4cm]{benchmarks/AVL/10000/stats.png}
+    \vspace*{\fill}
+\end{paracol}
+
+\mintinline{text}{Balanced Tree Insert + Search/AVL Tree/40000}
+\columnratio{0.75}
+\begin{paracol}{3}
+    \centering        
+    \includegraphics[width=11cm]{benchmarks/AVL/40000/plots.png}
+    \switchcolumn
+    \vspace*{\fill}
+    \includegraphics[width=4cm]{benchmarks/AVL/40000/stats.png}
+    \vspace*{\fill}
+\end{paracol}
+
+\mintinline{text}{Balanced Tree Insert + Search/AVL Tree/70000}
+\columnratio{0.75}
+\begin{paracol}{3}
+    \centering        
+    \includegraphics[width=11cm]{benchmarks/AVL/70000/plots.png}
+    \switchcolumn
+    \vspace*{\fill}
+    \includegraphics[width=4cm]{benchmarks/AVL/70000/stats.png}
+    \vspace*{\fill}
+\end{paracol}
+
+\newpage
+\mintinline{text}{Balanced Tree Insert + Search/AVL Tree/100000}
+\columnratio{0.75}
+\begin{paracol}{3}
+    \centering        
+    \includegraphics[width=11cm]{benchmarks/AVL/100000/plots.png}
+    \switchcolumn
+    \vspace*{\fill}
+    \includegraphics[width=4cm]{benchmarks/AVL/100000/stats.png}
+    \vspace*{\fill}
+\end{paracol}
+
+\mintinline{text}{Balanced Tree Insert + Search/AVL Tree/130000}
+\columnratio{0.75}
+\begin{paracol}{3}
+    \centering        
+    \includegraphics[width=11cm]{benchmarks/AVL/130000/plots.png}
+    \switchcolumn
+    \vspace*{\fill}
+    \includegraphics[width=4cm]{benchmarks/AVL/130000/stats.png}
+    \vspace*{\fill}
+\end{paracol}
 
 \subsection{Comparison}
 For every case the AVL Tree performs noticeably better than the Red Black Tree illustrating that the AVL Tree is more efficient.
