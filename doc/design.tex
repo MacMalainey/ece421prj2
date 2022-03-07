@@ -97,26 +97,26 @@ We also required error handling on public \mintinline{text}{Tree} methods since 
 \subsection{Analysis}
 \subsubsection{Crate Structure}
 There are four main things this crate exposes:
-\begin{description}
-    \item\mintinline{text}{Tree} The public interface for a binary search tree
-    \item[AVLTree] implementation of an AVLTree on a \mintinline{text}{Tree} using the \mintinline{text}{TreeBalance} trait
-    \item[RedBlackTree] implementation of an RedBlackTree on a \mintinline{text}{Tree} using the \mintinline{text}{TreeBalance} trait
-    \item\mintinline{text}{TreeBalance} trait definition for implementing a type a \mintinline{text}{Tree} will use to perform balancing operations
-\end{description}
+\begin{itemize}
+    \item \mintinline{text}{Tree} - the public interface for a binary search tree
+    \item \mintinline{text}{AVLTree} - implementation of an AVLTree on a \mintinline{text}{Tree} using the \mintinline{text}{TreeBalance} trait
+    \item \mintinline{text}{RedBlackTree} - implementation of an RedBlackTree on a \mintinline{text}{Tree} using the \mintinline{text}{TreeBalance} trait
+    \item \mintinline{text}{TreeBalance} - trait definition for implementing a type a \mintinline{text}{Tree} will use to perform balancing operations
+\end{itemize}
 \hfill \break
 \noindent The crate is organized into the following modules:
-\begin{description}
-    \item[lib] Top level library that exposes necessary components outside the crate
-    \item[main] CLI Demo code
-    \item[avl] The AVL Tree implementation of the \mintinline{text}{TreeBalance} trait
-    \item[redblack] The Red Black Tree implementation of the \mintinline{text}{TreeBalance} trait
-    \item[tree] \mintinline{text}{Tree} definition and implementation, submodules are further implementation dependencies
-    \item[tree::inspect] Holds trait definitions, structs, and enums required and related to the \mintinline{text}{TreeBalance} trait
-    \item[tree::ops] Holds functions to perform operations on a tree
-    \item[tree::node] Holds struct definition for a node in the tree
-\end{description}
+\begin{itemize}
+    \item \mintinline{text}{lib} - top level library that exposes necessary components outside the crate
+    \item \mintinline{text}{main} - CLI Demo code
+    \item \mintinline{text}{avl} - the AVL Tree implementation of the \mintinline{text}{TreeBalance} trait
+    \item \mintinline{text}{redblack} - the Red Black Tree implementation of the \mintinline{text}{TreeBalance} trait
+    \item \mintinline{text}{tree} - \mintinline{text}{Tree} definition and implementation, submodules are further implementation dependencies
+    \item \mintinline{text}{tree::inspect} - holds trait definitions, structs, and enums required and related to the \mintinline{text}{TreeBalance} trait
+    \item \mintinline{text}{tree::ops} - holds functions to perform operations on a tree
+    \item \mintinline{text}{tree::node} - holds struct definition for a node in the tree
+\end{itemize}
 
-\subsubsection{\mintinline{text}{Tree} Structure}
+\subsubsection{Tree Structure}
 A \mintinline{text}{Tree} acts as both the public facing interface for working with a binary search tree as well as
 acting as a way a container for pointers to a node's child objects as it will possibly contain
 a pointer to a \mintinline{text}{TreeNode}.  A \mintinline{text}{TreeNode} is an actual node in a tree stored on the heap that contains the
@@ -178,27 +178,27 @@ more information regarding what sort of tree would be the best fit for our use c
 \section{User Manual}
 
 \subsection{Tree}
-The  \mintinline{text}{Tree\textless T, U\textgreater} type represents a binary search tree to search  \mintinline{text}{T} and is balanced by  \mintinline{text}{U}.
+The  \mintinline{text}{Tree T, U} type represents a binary search tree to search  \mintinline{text}{T} and is balanced by \mintinline{text}{U}.
 The following are methods of the public interface for manipulating a \mintinline{text}{Tree} instance:
-\begin{description}
-    \item[Tree::new] Constructs an empty tree
-    \item[Tree::is\_empty] Returns true if the tree has no nodes
-    \item[Tree::insert] Inserts a key, rebalancing using  \mintinline{text}{U}
-    \item[Tree::search] Returns true if the key was found in the tree
-    \item[Tree::delete] Removes and returns a key, rebalancing using  \mintinline{text}{U}
-    \item[Tree::height] Returns the height of the tree
-    \item[Tree:leaves] Returns the number of leaf nodes in the tree   
-\end{description}
+\begin{itemize}
+    \item \mintinline{text}{Tree::new} - constructs an empty tree
+    \item \mintinline{text}{Tree::is_empty} - returns true if the tree has no nodes
+    \item \mintinline{text}{Tree::insert} - inserts a key, rebalancing using  \mintinline{text}{U}
+    \item \mintinline{text}{Tree::search} - returns true if the key was found in the tree
+    \item \mintinline{text}{Tree::delete} - removes and returns a key, rebalancing using  \mintinline{text}{U}
+    \item \mintinline{text}{Tree::height} - returns the height of the tree
+    \item \mintinline{text}{Tree:leaves} - returns the number of leaf nodes in the tree   
+\end{itemize}
 
 \subsection{Pre-Defined Types}
 The following are other predefined types for basic \mintinline{text}{Tree} usage
-\begin{description}
-    \item[avl::AVLBalance] \mintinline{text}{TreeBalance} type using AVL Tree rules
-    \item[AVLTree] Typedef for tree that uses AVLBalance
-    \item[redblack::RedBlackTree] \mintinline{text}{TreeBalance} type using Red Black Tree rules
-    \item[RedBlackTree] Typedef for tree that uses  \mintinline{text}{RedBlackBalance}
-    \item[BinarySearchTree] Typedef for a tree that doesn't perform any balancing
-\end{description}
+\begin{itemize}
+    \item \mintinline{text}{avl::AVLBalance} - \mintinline{text}{TreeBalance} type using AVL Tree rules
+    \item \mintinline{text}{AVLTree} - typedef for tree that uses AVLBalance
+    \item \mintinline{text}{redblack::RedBlackTree} - \mintinline{text}{TreeBalance} type using Red Black Tree rules
+    \item \mintinline{text}{RedBlackTree} - typedef for tree that uses  \mintinline{text}{RedBlackBalance}
+    \item \mintinline{text}{BinarySearchTree} - typedef for a tree that doesn't perform any balancing
+\end{itemize}
 
 \subsection{TreeBalance Trait Implementation}
 The \mintinline{text}{TreeBalance} trait can be used to perform rebalancing on a tree using custom rules.
