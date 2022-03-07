@@ -198,6 +198,27 @@ impl <T: Ord, U: TreeBalance> Tree<T, U> {
         self.0.as_ref().map_or(0, |node| node.borrow().get_leaves())
     }
 
+    /// Clears the contents of the tree
+    /// 
+    /// ```
+    /// use project2::tree::Tree;
+    /// use project2::avl::AVLBalance;
+    /// let mut tree = Tree::<usize, AVLBalance>::new();
+    /// 
+    /// // Insert some nodes
+    /// tree.insert(2);
+    /// tree.insert(3);
+    /// tree.insert(1);
+    /// assert_eq!(tree.height(), 2);
+    /// 
+    /// // Insert 1
+    /// tree.clear();
+    /// assert_eq!(tree.height(), 0);
+    /// ```
+    pub fn clear(&mut self) {
+        self.0 = None;
+    }
+
     /// Get a reference to the branch this wraps
     /// 
     /// Returns a reference to the [TreeBranch] that this tree wraps
