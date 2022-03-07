@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
-use project2::{RedBlackTree, AVLTree};
+use project2::{RedBlackTree, AVLTree, BinarySearchTree};
 
 fn generate_values(limit: u32) -> Vec<u32> {
     let mut values = Vec::with_capacity(usize::try_from(limit).unwrap());
@@ -11,7 +11,7 @@ fn generate_values(limit: u32) -> Vec<u32> {
 }
 
 fn bench_balanced_tree(c: &mut Criterion) {
-    let mut group = c.benchmark_group("Balanced Tree Insert + Search");
+    let mut group = c.benchmark_group("Tree Insert + Search");
     let data = generate_values(130000);
     for tree_size in &[10000, 40000, 70000, 100000, 130000] {
         // Benchmark Red Black Tree
@@ -45,6 +45,26 @@ fn bench_balanced_tree(c: &mut Criterion) {
                 })
             }
         );
+
+        // Only bench first case because it is horrible
+        if *tree_size == 10000 {
+            // Benchmark Binary Search Tree
+            group.bench_with_input(
+                BenchmarkId::new("Binary Search Tree", tree_size),
+                tree_size,
+                |b, num| {
+                    b.iter_with_large_drop(|| {
+                        let mut tree = BinarySearchTree::new();
+                        // Insert tree_size elements into tree
+                        data.iter().take(*num).for_each(|v| tree.insert(*v));
+                        // Search for the first tree_size/10 elements in the tree
+                        data.iter().take(num/10).for_each(|v| { tree.search(&v); });
+                        tree
+                    })
+                }
+            );
+        }
+        
     }
     group.finish()
 }
