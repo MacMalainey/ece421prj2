@@ -22,15 +22,16 @@
 [x] - Write unbalanced tree
 
 [] - CLI
-    [] - Allow choosing of the type tree (and switching between them)
-    [] - Allow deleting from the tree
-    [] - Allow inserting into the tree
+    [X] - Allow choosing of the type tree (and switching between them)
+    [X] - Allow deleting from the tree
+    [X] - Allow inserting into the tree
+    [X] - Allow searching the tree
     [] - Allow clearing the tree
-    [] - Allow pretty printing (use Debug trait with pretty print flag) of the tree
-    [] - Allow inorder printing (use Display trait) of the tree
-    [] - Allow checking if the tree is empty
-    [] - Allow checking the height of the tree
-    [] - Allow checking the number of leaves on the tree
+    [X] - Allow pretty printing (use Debug trait with pretty print flag) of the tree
+    [X] - Allow inorder printing (use Display trait) of the tree
+    [X] - Allow checking if the tree is empty
+    [X] - Allow checking the height of the tree
+    [X] - Allow checking the number of leaves on the tree
 
 [x] - Benchmarks
     [x] - Comment on results
